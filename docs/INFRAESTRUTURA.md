@@ -10,8 +10,8 @@ Prepara o ambiente onde as funcionalidades vão ser construídas, seguindo a [Ar
 | 4.2 | Git e GitHub | ✅ Feito (repositório privado GabrielTolin/mrpolobarber) |
 | 4.3 | Supabase | ✅ Feito e reconfirmado (2026-11-11) |
 | 4.4 | Migrations | ✅ Fluxo validado |
-| 4.5 | Segurança inicial | 🔶 Migration aplicada · falta o G-1 (Auth) do Gabriel |
-| 4.6 | Estrutura da aplicação | ⏳ |
+| 4.5 | Segurança inicial | ✅ Feito (migration aplicada + Auth configurado) |
+| 4.6 | Estrutura da aplicação | ✅ Feito (frontend + migrations admins_is_admin e correção) |
 | 4.7 | PWA | ⏳ |
 | 4.8 | Vercel | ⏳ |
 | 4.9 | Testes da infraestrutura | ⏳ |
@@ -143,7 +143,7 @@ O conector Supabase aqui do Claude está ligado à **outra conta** (Obrapoint / 
 
 ---
 
-## 4.5 — Segurança inicial 🔶 *(proposta)*
+## 4.5 — Segurança inicial ✅
 
 Três partes: a configuração do **Auth** (pelo Gabriel, no painel), uma **migration de base de segurança** (antes de qualquer tabela) e a verificação de que **não há segredos no site**. As políticas RLS de cada tabela são criadas junto com as tabelas, na implementação (3.7).
 
@@ -188,3 +188,123 @@ Ficheiro `supabase/migrations/20261111210855_security_baseline.sql`:
 | Procura de `sb_secret_`, `service_role` e `SUPABASE_SERVICE` na build (`dist/`) | **Nada encontrado** |
 | Variáveis no site | Só `VITE_*` públicas (URL e chave publicável) |
 | `.env.local` | Fora do Git (4.2) |
+
+### A. Resultado do G-1 (verificado a 2026-11-11)
+
+Verificado pelas definições públicas do Auth (`GET /auth/v1/settings`):
+
+| Definição | Resultado |
+|---|---|
+| Registos públicos | ✅ **desligados** (`disable_signup: true`). Na 1.ª verificação ainda estavam ligados e o Gabriel corrigiu |
+| Fornecedores ativos | ✅ só **email** |
+| "Secure password change" e mínimo de 8 caracteres | Não aparecem nas definições públicas. Confirmam-se na **4.9**, com a conta do barbeiro |
+
+---
+
+## 4.6 — Estrutura da aplicação ✅
+
+Cria o **esqueleto** das três zonas, com páginas provisórias ("Em construção"). **Nenhuma funcionalidade** da barbearia.
+
+### Pastas (3.1)
+
+```
+src/
+├─ main.jsx                 BrowserRouter + AuthProvider
+├─ App.jsx                  rotas das 3 zonas
+├─ index.css                Tailwind + cores/tipos de letra base
+├─ lib/
+│  └─ supabase.js           (já existe)
+├─ contexts/
+│  └─ AuthContext.jsx       sessão do Supabase (+ "é administrador?")
+├─ components/
+│  ├─ EmConstrucao.jsx      página provisória reutilizável
+│  └─ Carregando.jsx        indicador de carregamento
+├─ public/                  zona pública
+│  ├─ PublicLayout.jsx      cabeçalho com o nome da barbearia + rodapé (privacidade)
+│  ├─ Marcar.jsx            /           (provisória)
+│  ├─ LinkPessoal.jsx       /m/:token   (provisória)
+│  └─ NaoEncontrado.jsx     qualquer outro endereço
+└─ admin/                   painel (carregado só quando se entra em /admin)
+   ├─ AdminLayout.jsx       barra inferior (telemóvel) / menu lateral (ecrã grande), 2.8
+   ├─ RotaAdmin.jsx         proteção das rotas (3.9)
+   ├─ Login.jsx             /admin/login
+   ├─ SemAcesso.jsx         conta sem permissão
+   └─ pages/                Dashboard, Agenda, Clientes, Servicos, Horarios,
+                            Notificacoes, Configuracoes (provisórias)
+```
+
+### Rotas
+
+| Zona | Rota | Página |
+|---|---|---|
+| Pública | `/` | Marcar (provisória) |
+| Link pessoal | `/m/:token` | LinkPessoal (provisória) |
+| Painel | `/admin/login` | Login (**funcional**: email + palavra-passe, terminar sessão) |
+| Painel | `/admin` · `/admin/agenda` · `/admin/clientes` · `/admin/servicos` · `/admin/horarios` · `/admin/notificacoes` · `/admin/configuracoes` | Provisórias, dentro do `AdminLayout` |
+| — | qualquer outra | NaoEncontrado |
+
+### Decisões técnicas
+1. **O painel é carregado à parte** (`React.lazy`). Quem só marca não descarrega o código do painel, e a página pública fica mais leve (3.1 decisão 1).
+2. **`AdminLayout` já com a navegação final** da 2.8: barra inferior Início · Agenda · Clientes · Notificações · Mais (Serviços, Horários, Configurações, Terminar sessão), e menu lateral a partir de 768 px.
+3. **`RotaAdmin`** segue a 3.9: sem sessão → `/admin/login`; com sessão mas sem ser administrador → "Sem acesso"; administrador → painel.
+4. O **login é a única coisa funcional**, porque é infraestrutura e serve para testar o Auth na 4.9.
+
+### ⚠️ Duas decisões
+
+**1. A verificação "é administrador?"** precisa da tabela `admins` e da função `is_admin()` (3.7), que só existem na implementação.
+- **A — Criar já uma migration pequena `admins_is_admin` (recomendo):** só a tabela `admins` (com RLS) e a função `is_admin()`. É infraestrutura de segurança e permite testar a 3.9 por inteiro na 4.9.
+- **B — Fica para a implementação.** Até lá, o `RotaAdmin` só verifica se há sessão. Funciona, mas deixa um buraco temporário.
+
+**2. Identidade visual.** Ainda **não falámos** das cores, do logótipo e dos tipos de letra da barbearia. Nesta subetapa uso um visual **neutro provisório** (preto/cinzento, letra do sistema), fácil de trocar depois, porque as cores ficam centralizadas no `index.css`. A identidade visual fica como **novo pendente (P-12)**, para tratar antes da área pública.
+
+### Decisões tomadas (2026-11-11)
+1. **Verificação de administrador: opção A.** Migration `20261111212240_admins_is_admin.sql` com a tabela `admins` (RLS, só lê a própria linha, máx. 1 linha) e a função `is_admin()` (definer, `search_path` vazio, só `authenticated` executa). **Aplicada** (com a correção abaixo).
+2. **Identidade visual:** visual neutro provisório, com as cores centralizadas no `@theme` do `index.css`. Fica o **pendente P-12** (cores, logótipo, tipos de letra).
+
+### Implementado
+
+| Ficheiro | O quê |
+|---|---|
+| `src/App.jsx` | Rotas: zona pública (`/`, `/m/:token`, 404) + `admin/*` carregado à parte (`React.lazy`) |
+| `src/main.jsx` | `BrowserRouter` + `AuthProvider` |
+| `src/contexts/AuthContext.jsx` · `auth.js` · `src/hooks/useAuth.js` | Sessão (renovação automática) + verificação `is_admin()` sempre que o utilizador muda |
+| `src/components/` | `Carregando`, `EmConstrucao` |
+| `src/public/` | `PublicLayout` (nome + rodapé de privacidade), `Marcar`, `LinkPessoal`, `NaoEncontrado` |
+| `src/admin/` | `AdminApp` (rotas), `RotaAdmin` (proteção 3.9), `Login` (funcional), `SemAcesso`, `AdminLayout` (barra inferior + "Mais" no telemóvel, menu lateral ≥ 768 px), `navegacao.js`, `pages/Paginas.jsx` (7 provisórias) |
+| `src/index.css` | Cores neutras em `@theme` (`ink`, `ink-muted`, `line`, `surface`, `canvas`, `accent`) |
+
+### Verificado no browser (2026-11-11)
+
+| Teste | Resultado |
+|---|---|
+| `/` · `/m/abc123` · `/nao-existe` | Página provisória · página provisória · "Página não encontrada" |
+| `/admin/agenda` sem sessão | Redireciona para **`/admin/login`** |
+| Login com dados errados | "Email ou palavra-passe incorretos." |
+| Página pública a 375 px | OK (cabeçalho, conteúdo, rodapé) |
+| Consola | Sem erros |
+| Build | Painel num ficheiro à parte (`AdminApp-*.js`, ~10 kB) |
+| Lint | Sem avisos |
+
+**Ainda não testado (precisa da migration aplicada e da conta do barbeiro, G-3):** "Sem acesso" com uma conta que não é admin, e o painel com o administrador. Fica para a **4.9**.
+
+### Migrations aplicadas (2026-11-11)
+
+| Migration | Resultado |
+|---|---|
+| `20261111212240_admins_is_admin` | Tabela `admins` com RLS e política "só a própria linha", sem acesso do `anon`. Função `is_admin()` definer com `search_path` vazio |
+| `20261111212903_fix_function_default_privileges` | **Correção da base de segurança** (ver abaixo) |
+
+**Falha encontrada e corrigida:** a verificação mostrou que `is_admin()` ficava executável por `PUBLIC` (e por isso pelo `anon`). A causa: o `alter default privileges … in schema public` da `security_baseline` só **acrescenta** permissões. O `execute` para `PUBLIC` vem da regra **global** do PostgreSQL, que só se tira com um `alter default privileges` **sem** `in schema`. A migration de correção acrescenta essa regra global e retira o `PUBLIC` das funções existentes.
+
+**Verificação depois da correção:**
+
+| Teste | Resultado |
+|---|---|
+| Permissões da `is_admin()` | `postgres`, `service_role`, `authenticated` (sem `PUBLIC`) |
+| `anon` executa `is_admin()`? | **Não** |
+| Regra global para funções novas | Só `postgres` |
+| Visitante sem sessão chama `rpc/is_admin` pelo site | **401** "permission denied for function is_admin" |
+| Visitante sem sessão lê `admins` | **401** "permission denied" |
+| `db:lint` / `db:status` | Sem erros / 3 migrations iguais local = remoto |
+
+**Lição registada:** depois de criar funções, verificar sempre as permissões reais (`proacl`) e não só confiar nas regras por defeito.

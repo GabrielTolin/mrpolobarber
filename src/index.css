@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+/* Visual NEUTRO PROVISÓRIO (Etapa 4.6).
+   A identidade visual da barbearia é o pendente P-12: quando houver cores e
+   tipos de letra definidos, troca-se aqui e todo o site acompanha. */
+@theme {
+  --color-ink: #111111;          /* texto forte, botões primários */
+  --color-ink-muted: #6b6b6b;    /* texto secundário */
+  --color-line: #e2e2e2;         /* linhas e contornos */
+  --color-surface: #ffffff;      /* cartões, barras */
+  --color-canvas: #f6f6f6;       /* fundo das páginas */
+  --color-accent: #111111;       /* acento da marca (provisório = ink) */
+}
+
+html,
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+}
