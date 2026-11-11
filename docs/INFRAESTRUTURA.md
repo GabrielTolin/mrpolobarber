@@ -7,10 +7,10 @@ Prepara o ambiente onde as funcionalidades vão ser construídas, seguindo a [Ar
 | Subetapa | Tema | Estado |
 |---|---|---|
 | 4.1 | Preparação do ambiente de desenvolvimento | ✅ Feito (à espera da tua validação) |
-| 4.2 | Git e GitHub | 🔶 Preparado (falta o commit e o push do Gabriel) |
-| 4.3 | Supabase | ✅ Feito (2026-11-05), a reconfirmar na 4.9 |
-| 4.4 | Migrations | 🔶 Quase feito (CLI instalada, `init` + `link` feitos, pasta vazia) |
-| 4.5 | Segurança inicial | ⏳ |
+| 4.2 | Git e GitHub | ✅ Feito (repositório privado GabrielTolin/mrpolobarber) |
+| 4.3 | Supabase | ✅ Feito e reconfirmado (2026-11-11) |
+| 4.4 | Migrations | ✅ Fluxo validado |
+| 4.5 | Segurança inicial | 🔶 Migration aplicada · falta o G-1 (Auth) do Gabriel |
 | 4.6 | Estrutura da aplicação | ⏳ |
 | 4.7 | PWA | ⏳ |
 | 4.8 | Vercel | ⏳ |
@@ -36,7 +36,7 @@ Prepara o ambiente onde as funcionalidades vão ser construídas, seguindo a [Ar
 | `supabase/migrations/` | Vazia |
 | Dev server | Porta **5174** · configuração `mrpolobarber` em `Desktop\.claude\launch.json` |
 | `vercel.json` | Só a reescrita da SPA (faltam os cabeçalhos de segurança, 4.8) |
-| Git | Repositório local na `main`, 1.º commit preparado |
+| Git | `main` ligada a `origin` (GitHub privado), 1.º commit `637f36e` |
 | VS Code | `.vscode/extensions.json` com extensões recomendadas |
 
 ---
@@ -69,7 +69,7 @@ Prepara o ambiente onde as funcionalidades vão ser construídas, seguindo a [Ar
 
 ---
 
-## 4.2 — Git e GitHub 🔶 *(preparado, falta o commit e o push do Gabriel)*
+## 4.2 — Git e GitHub ✅
 
 | Item | Estado |
 |---|---|
@@ -94,3 +94,97 @@ git commit -m "chore: configuração inicial do MR Polo Barber (Etapas 1–4.1)"
 git remote add origin https://github.com/GabrielTolin/mrpolobarber.git
 git push -u origin main
 ```
+
+---
+
+## 4.3 — Supabase ✅
+
+Feito a 2026-11-05 e **reconfirmado a 2026-11-11**:
+
+| Verificação | Resultado |
+|---|---|
+| Projeto | `mrpolobarber` · ref `sxxbenaejbdgadrsavef` · eu-west-1 · PostgreSQL 17 · conta Supabase separada |
+| `.env.local` | URL correto + chave **publicável** (`sb_publishable_…`) |
+| Auth (`/auth/v1/health`) | **200** |
+| API REST com a chave publicável | **401** na raiz: o público não consegue listar a estrutura da base de dados (esperado) |
+| Cliente React | `src/lib/supabase.js` (avisa na consola se faltarem as variáveis) |
+
+---
+
+## 4.4 — Migrations ✅
+
+**Já feito:** CLI 3.1 no projeto, `supabase init`, `supabase link`, pasta `supabase/migrations/` (vazia, no Git) e os comandos `db:*` com `--remote` (4.1).
+
+**Acrescentado:** `npm run db:lint`, que verifica erros nas funções da base de dados remota (`supabase db lint`). Testado: "No schema errors found".
+
+### Fluxo para cada migration
+
+| # | Passo | Quem |
+|---|---|---|
+| 1 | `npm run db:new <nome>` cria `supabase/migrations/<data-hora>_<nome>.sql` | Claude |
+| 2 | Escrever o SQL, **sem `begin`/`commit`**: a CLI já aplica cada ficheiro numa transação (se falhar, nada fica a meio) | Claude |
+| 3 | **Mostrar o SQL e explicar o que faz** | Claude |
+| 4 | **Validar** | Gabriel |
+| 5 | `npm run db:push:dry` → confirmar que só vai a migration esperada | Claude |
+| 6 | `npm run db:push` → aplicar | Claude |
+| 7 | `npm run db:status` + `npm run db:lint` + **critérios técnicos** da subetapa | Claude |
+| 8 | **Advisors de segurança** no painel da Supabase (Advisors → Security) | Gabriel (ver nota) |
+| 9 | Commit da migration + documentos | Gabriel |
+
+### Regras
+1. **Tudo por migration.** Nada se cria nem se altera à mão no painel da Supabase (exceto a configuração do Auth e os segredos, que não são SQL: G-1 a G-5 da 3.11).
+2. **Uma migration aplicada nunca se edita.** Para corrigir, cria-se uma migration nova.
+3. **Nomes:** a CLI põe a data e a hora à frente (ex.: `20261112103000_tables.sql`). Os números 0001–0007 da 3.11 são a **ordem**, não o nome do ficheiro.
+4. **Dados iniciais** (configurações, horário, serviços, feriados) vão **numa migration**, e não no `seed.sql` da CLI, que só corre em bases de dados locais.
+5. **Cópia de segurança antes de migrations destrutivas** (apagar ou alterar colunas com dados): `npx supabase db dump --remote --data-only -f <ficheiro>` guardado fora do repositório. Nas primeiras migrations a base de dados está vazia, por isso não é preciso.
+
+### Nota sobre os advisors
+O conector Supabase aqui do Claude está ligado à **outra conta** (Obrapoint / TS Hours) e não vê este projeto (decisão do início). Por isso os **advisors de segurança** veem-se no painel da Supabase. É só abrir Advisors → Security Advisor depois de cada migration e enviar ao Claude o que aparecer. O `db lint` cobre os erros nas funções.
+
+---
+
+## 4.5 — Segurança inicial 🔶 *(proposta)*
+
+Três partes: a configuração do **Auth** (pelo Gabriel, no painel), uma **migration de base de segurança** (antes de qualquer tabela) e a verificação de que **não há segredos no site**. As políticas RLS de cada tabela são criadas junto com as tabelas, na implementação (3.7).
+
+### A. Configuração do Auth (G-1, pelo Gabriel)
+
+No painel da Supabase, projeto `mrpolobarber`:
+
+| Onde | Definição | Valor |
+|---|---|---|
+| Authentication → Sign In / Providers | **Allow new users to sign up** | **Desligado** |
+| Authentication → Sign In / Providers → Email | Email provider | Ligado |
+| Authentication → Sign In / Providers → Email | **Secure password change** | **Desligado** |
+| Authentication → Sign In / Providers → Email | Minimum password length | **8** |
+| Authentication → Sign In / Providers | Restantes fornecedores (Google, Phone…) | Desligados |
+| Authentication → URL Configuration | Site URL | `https://mrpolobarber.vercel.app` (ajusta-se na 4.8 se o endereço for outro) |
+| Authentication → URL Configuration | Redirect URLs | `http://localhost:5174/**` e `https://mrpolobarber.vercel.app/**` |
+
+A conta do barbeiro (G-3) cria-se só quando houver painel para testar.
+
+### B. Migration `security_baseline`
+
+Ficheiro `supabase/migrations/20261111210855_security_baseline.sql`:
+- **Funções:** retira a permissão de executar a `PUBLIC`, `anon` e `authenticated`, agora e para todas as funções futuras (3.7 regra 4). Cada função pública ou do painel recebe depois o seu `grant execute` explícito.
+- **Tabelas e sequências:** o `anon` não recebe nenhuma permissão, agora e no futuro (3.7 regra 2). O `authenticated` mantém as permissões normais, porque o acesso real fica sempre limitado pelas políticas RLS de administrador.
+
+É uma proteção em profundidade: mesmo que uma tabela nova fosse criada sem RLS por engano, o público não lhe tinha acesso.
+
+**✅ Aplicada a 2026-11-11** (`npm run db:push`) e verificada:
+
+| Verificação | Resultado |
+|---|---|
+| `db:status` | `20261111210855` local = remoto |
+| `db:lint` | Sem erros |
+| Permissões por defeito em `public` (consulta só de leitura a `pg_default_acl`) | **Funções:** só `postgres` e `service_role` executam · **Tabelas:** `authenticated` e `service_role`, **sem `anon`** |
+
+**Ferramenta útil:** `npx supabase db query --remote --read-only "<sql>"` faz consultas **só de leitura** ao projeto. Substitui o conector, que não vê esta conta.
+
+### C. Nenhum segredo no site
+
+| Verificação | Resultado |
+|---|---|
+| Procura de `sb_secret_`, `service_role` e `SUPABASE_SERVICE` na build (`dist/`) | **Nada encontrado** |
+| Variáveis no site | Só `VITE_*` públicas (URL e chave publicável) |
+| `.env.local` | Fora do Git (4.2) |

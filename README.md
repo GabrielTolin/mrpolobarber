@@ -41,6 +41,7 @@ npx supabase link --project-ref sxxbenaejbdgadrsavef
 | `npm run db:push:dry` | Mostra que migrations seriam aplicadas, sem aplicar nada |
 | `npm run db:push` | Aplica as migrations pendentes no projeto Supabase |
 | `npm run db:status` | Mostra que migrations estão aplicadas |
+| `npm run db:lint` | Verifica erros nas funções da base de dados |
 
 ## Regras do projeto
 

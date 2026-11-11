@@ -14,7 +14,8 @@
     "db:new": "supabase migration new",
     "db:push": "supabase db push --remote",
     "db:status": "supabase migration list --remote",
-    "db:push:dry": "supabase db push --remote --dry-run"
+    "db:push:dry": "supabase db push --remote --dry-run",
+    "db:lint": "supabase db lint --remote --fail-on error"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",
