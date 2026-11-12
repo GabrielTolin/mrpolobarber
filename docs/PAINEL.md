@@ -6,10 +6,12 @@ Construir o PWA do barbeiro: autenticação, dashboard, agenda, clientes, servi�
 
 **Regra do design (decisão de 2026-11-12):** o **visual** vem do handoff do Claude Design (`design/handoff-painel-inicio/`); o **conteúdo** (estados, serviços, pendências, ações) vem dos documentos validados. Os dados do design são exemplos.
 
+**Plano validado a 2026-11-12.** As notificações (página, push, Edge Function) ficam numa etapa própria (opção A).
+
 | Subetapa | Tema | Estado |
 |---|---|---|
-| 5.0 | Sistema visual (design) | ✅ Feito (à espera da tua validação) |
-| 5.1 | Base de dados do núcleo | ⏳ *(plano proposto, por validar)* |
+| 5.0 | Sistema visual (design) | ✅ Validado |
+| 5.1 | Base de dados do núcleo | 🔶 Aplicada e verificada · falta o teste das regras automáticas |
 | 5.2 | Autenticação (mudar palavra-passe) | ⏳ |
 | 5.3 | Serviços e preços | ⏳ |
 | 5.4 | Horários e bloqueios | ⏳ |
@@ -73,3 +75,31 @@ Em `npm run dev`, **`/admin?preview`** mostra o painel sem login, para rever o d
 
 ### Verificado (2026-11-12)
 Computador 1440 px e telemóvel 375 px (Início, login), lint sem avisos, build OK, consola sem erros.
+
+---
+
+## 5.1 — Base de dados do núcleo 🔶
+
+Quatro migrations, seguindo a Arquitetura 3.2–3.8 sem decisões novas (exceto `owner_name`, já aceite):
+
+| Migration | Conteúdo |
+|---|---|
+| `20261112095910_core_tables` | 8 tipos enumerados · 14 tabelas novas (`settings`, `weekly_hours`, `weekly_breaks`, `day_overrides`, `holidays`, `blocks`, `services`, `clients`, `appointments`, `appointment_services`, `appointment_events`, `notifications`, `push_subscriptions`, `rate_limits`) · chaves, FKs (RESTRICT/CASCADE/SET NULL da 3.3), únicos, CHECKs e limites das configurações (3.5) · **restrição parcial contra sobreposições** (3.6, camada 3) · índices |
+| `20261112095912_core_integrity` | `updated_at` automático · **proibido apagar** marcações e `settings` · histórico só cresce · **regras de estado** (transições da 2.3, falta só na janela, finais imutáveis exceto "cancelamento tardio") · **edição por estado** (2.6) · **histórico automático** de cada alteração (2.6) |
+| `20261112095914_core_rls` | RLS nas 14 tabelas · políticas `is_admin()` · marcações, bloqueios e histórico **só leitura direta** · notificações: só `read_at` · push: só os próprios dispositivos · nada para `anon` |
+| `20261112095916_core_seed` | `settings` (valores validados, **owner_name = Matheus**) · horário Seg–Sex 09–19 + almoço 13–14, Sáb 09–13, Dom fechado · **os 5 serviços** · feriados **2026–2030** (nacionais, móveis pela Páscoa, 20/08 Albufeira; Carnaval desligado) com `ensure_holidays(ano)` |
+
+**Ainda não incluído (vem nas subetapas seguintes):** funções de escrita de bloqueios (5.4), motor da agenda e funções públicas (5.7), `pg_cron` (5.9), notificações (etapa própria).
+
+### Aplicado a 2026-11-12 ✅
+
+As 4 migrations foram aplicadas sem erros (`db:push`). Há agora 7 migrations, iguais no projeto e no repositório. `db:lint`: sem erros.
+
+| Verificação | Resultado |
+|---|---|
+| RLS | **15/15 tabelas** com RLS ativo |
+| Dados iniciais | `owner_name` = Matheus · 6 dias abertos · 5 pausas de almoço · **5 serviços** · **75 feriados** (15 × 5 anos), 5 desligados (Carnaval) |
+| Feriados móveis | 2026: Sexta-feira Santa 03/04, Páscoa 05/04, Corpo de Deus 04/06 · 2027: 26/03, 28/03, 27/05 ✅ (datas oficiais) |
+| Permissões das funções novas | Nenhuma executável por `anon` nem `authenticated` (só `is_admin` para `authenticated`, como previsto) ✅ |
+| Visitante sem sessão, 15 tabelas | **401 em todas** ✅ |
+| Visitante sem sessão chama `ensure_holidays` / `easter_date` | **401** ✅ |
