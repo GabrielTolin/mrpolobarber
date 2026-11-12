@@ -29,12 +29,3 @@ export function Notificacoes() {
     </>
   )
 }
-
-export function Horarios() {
-  return (
-    <>
-      <CabecalhoPagina titulo="Horários e bloqueios" />
-      <EmConstrucao descricao="Horário semanal, folgas, férias e feriados (2.12)." />
-    </>
-  )
-}

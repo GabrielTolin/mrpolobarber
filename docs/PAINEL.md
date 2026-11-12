@@ -13,8 +13,8 @@ Construir o PWA do barbeiro: autenticação, dashboard, agenda, clientes, servi�
 | 5.0 | Sistema visual (design) | ✅ Validado |
 | 5.1 | Base de dados do núcleo | ✅ Validado |
 | 5.2 | Autenticação (mudar palavra-passe) | ✅ Testado pelo Gabriel e validado |
-| 5.3 | Serviços e preços | 🔶 Feito · falta o teu teste com dados reais |
-| 5.4 | Horários e bloqueios | ⏳ |
+| 5.3 | Serviços e preços | ✅ Testado pelo Gabriel e validado |
+| 5.4 | Horários e bloqueios | 🔶 Migration aplicada e testada · falta o teu teste no ecrã |
 | 5.5 | Configurações | ⏳ |
 | 5.6 | Clientes | ⏳ |
 | 5.7 | Motor da agenda (backend) | ⏳ |
@@ -150,7 +150,7 @@ O login, a sessão persistente, "Sem acesso" e terminar sessão já existiam (4.
 
 ---
 
-## 5.3 — Serviços e preços 🔶 *(falta o teu teste com dados reais)*
+## 5.3 — Serviços e preços ✅
 
 Segue a Especificação 2.11. Escrita direta na tabela `services` (permitida ao administrador pelo RLS da 5.1).
 
@@ -182,3 +182,62 @@ Segue a Especificação 2.11. Escrita direta na tabela `services` (permitida ao 
 4. Subir/descer um serviço → a ordem muda.
 5. Desativar o serviço de teste → vai para o fim, "Inativo".
 6. Apagar o serviço de teste → desaparece.
+
+**Teste T-5.3 do Gabriel (2026-11-12): ✅ tudo OK.**
+
+---
+
+## 5.4 — Horários e bloqueios 🔶 *(falta o teu teste no ecrã)*
+
+Segue a Especificação 2.12 (com 1.3, 1.8, 2.2) e a Arquitetura 3.3 regra 4 e 3.6.
+
+### Migration `20261112102218_admin_blocks`
+| Função | O quê |
+|---|---|
+| `lock_agenda()` | **Fila única da agenda** (3.6, camada 1). Usada já aqui e, na 5.7, pelas marcações |
+| `require_admin()` | Recusa quem não é administrador |
+| `active_appointments_between(início, fim)` | Marcações ativas que se sobrepõem a um período (para os avisos) |
+| `admin_save_block(...)` | Cria/altera bloqueio, folga ou férias. Horas em **hora de Lisboa**, convertidas na base de dados. **Verificar → avisar → confirmar**: sem confirmação devolve as marcações afetadas e não grava; com confirmação grava e marca-as como sobreposição intencional. **Nunca cancela nada** |
+| `admin_delete_block(id)` | Remove um bloqueio (também pela fila) |
+
+Só `admin_save_block` e `admin_delete_block` são executáveis por `authenticated` (verificam `is_admin()` lá dentro).
+
+### Página `Horários e bloqueios`
+| Secção | O que permite |
+|---|---|
+| **Horário semanal** | Cada dia: aberto/fechado, abertura, fecho, **várias pausas**. "Gravar horário" grava a semana inteira. Valida fecho > abertura e pausas dentro do horário |
+| **Dias com horário especial** | Data + **fechado** ou **horário especial**, nota. Substitui o horário semanal nesse dia, **incluindo as pausas** (3.3) |
+| **Bloqueios, folgas e férias** | **Bloqueio de horas** (data + início–fim) · **Folga** (um dia) · **Férias** (de … até, inclusive) · motivo opcional. Lista dos atuais e futuros, com remover |
+| **Feriados** | Ano atual e seguinte · **ligar/desligar** cada feriado · acrescentar dias fechados próprios (só estes se apagam) |
+
+**Marcações afetadas (2.12 regra 4):** ao gravar o horário semanal, um dia especial ou um bloqueio por cima de marcações já feitas, aparece o aviso com a **lista** (data, hora, cliente, serviço), um link **"Avisar" por WhatsApp** com mensagem pré-escrita para cada cliente e os botões **"Gravar mesmo assim"** / "Voltar". Nada é cancelado automaticamente.
+
+### Ficheiros
+`src/lib/datas.js` (ampliado: `partesLisboa`, `hojeLisboa`, `somarDias`, `diaSemanaDe`, `formatarData`, `formatarInstante`, `horaCurta`) · `src/admin/pages/Horarios.jsx` · `src/admin/pages/horarios/` (`HorarioSemanal`, `DiasEspeciais`, `Bloqueios`, `Feriados`, `AvisoAfetadas`, `afetadas.js`).
+
+### Verificado (2026-11-12)
+- Datas de Lisboa: 13/11 10:00 UTC → 10:00 (inverno) · 14/07 09:00 UTC → **10:00 (verão)** · 31/12 + 1 dia → 01/01 · domingo = 7 ✅
+- Lint e build OK · layout em 2 colunas (computador) no estilo do design ✅
+
+### Teste do Gabriel (T-5.4), depois de aplicar a migration
+1. **Horário semanal:** aparece Seg–Sex 09–19 com almoço 13–14, Sáb 09–13, Dom fechado. Mudar um dia, gravar, recarregar → mantém-se. Repor como estava.
+2. **Dia especial:** criar um dia fechado na próxima semana → aparece na lista → remover.
+3. **Bloqueio:** criar um bloqueio de horas amanhã, uma folga e umas férias de 2 dias → aparecem com as datas certas → remover.
+4. **Feriados:** desligar e voltar a ligar um feriado · acrescentar um dia próprio e removê-lo.
+5. *(O aviso de marcações afetadas só pode ser testado quando houver marcações, na 5.8.)*
+
+### Migration aplicada e testada (2026-11-12) ✅
+
+**Permissões reais:** `admin_save_block` e `admin_delete_block` executáveis só por `authenticated` (com `is_admin()` lá dentro) · `lock_agenda`, `require_admin`, `active_appointments_between` por ninguém · visitante sem sessão → **401** nas três funções · `db:lint` sem erros.
+
+**Teste das funções** (transação desfeita no fim, simulando o administrador; script `teste_bloqueios_54.sql`). A base de dados ficou a zero (0 bloqueios, 0 marcações, 0 clientes, 0 eventos):
+
+| # | Teste | Resultado |
+|---|---|---|
+| 1 | Conta que não é admin | ✅ Recusada |
+| 2 | Bloqueio por cima de uma marcação, sem confirmar | ✅ Não grava, devolve 1 marcação afetada |
+| 3 | Confirmar | ✅ Grava 10:00–11:00 (Lisboa) · marcação fica sobreposição intencional · **não é cancelada** |
+| 4 | Folga | ✅ Dia inteiro (00:00 → 00:00 do dia seguinte) |
+| 5 | Fim antes do início | ✅ Recusado ("O fim tem de ser depois do início") |
+| 6 | Apagar bloqueio | ✅ |
+| 7 | Histórico da sobreposição | ✅ Registado com ator "barbeiro" |
