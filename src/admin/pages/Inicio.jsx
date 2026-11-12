@@ -1,18 +1,20 @@
 import { Link } from 'react-router-dom'
 import { dataPorExtenso, saudacao } from '../../lib/datas'
 import CabecalhoPagina from '../CabecalhoPagina'
-
-// Provisório: passa a vir de settings.owner_name na base de dados (Etapa 5.1).
-const NOME_BARBEIRO = 'Matheus'
+import { useSettings } from './configuracoes/useSettings'
 
 // Estrutura do Início segundo o handoff do design. Os dados reais
 // (marcações, próxima, pendências) entram na subetapa do Dashboard.
 export default function Inicio() {
+  // Nome do barbeiro vem das Configurações (settings.owner_name).
+  const { settings } = useSettings()
+  const nome = settings?.owner_name
+
   return (
     <>
       <CabecalhoPagina
         eyebrow={dataPorExtenso()}
-        titulo={`${saudacao()}, ${NOME_BARBEIRO}`}
+        titulo={nome ? `${saudacao()}, ${nome}` : saudacao()}
         poste
       >
         <Link to="/admin/agenda" className="btn-primary">

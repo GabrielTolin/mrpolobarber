@@ -14,8 +14,8 @@ Construir o PWA do barbeiro: autenticação, dashboard, agenda, clientes, servi�
 | 5.1 | Base de dados do núcleo | ✅ Validado |
 | 5.2 | Autenticação (mudar palavra-passe) | ✅ Testado pelo Gabriel e validado |
 | 5.3 | Serviços e preços | ✅ Testado pelo Gabriel e validado |
-| 5.4 | Horários e bloqueios | 🔶 Migration aplicada e testada · falta o teu teste no ecrã |
-| 5.5 | Configurações | ⏳ |
+| 5.4 | Horários e bloqueios | ✅ Testado pelo Gabriel e validado |
+| 5.5 | Configurações | 🔶 Feito · falta o teu teste com sessão |
 | 5.6 | Clientes | ⏳ |
 | 5.7 | Motor da agenda (backend) | ⏳ |
 | 5.8 | Agenda | ⏳ |
@@ -187,7 +187,7 @@ Segue a Especificação 2.11. Escrita direta na tabela `services` (permitida ao 
 
 ---
 
-## 5.4 — Horários e bloqueios 🔶 *(falta o teu teste no ecrã)*
+## 5.4 — Horários e bloqueios ✅
 
 Segue a Especificação 2.12 (com 1.3, 1.8, 2.2) e a Arquitetura 3.3 regra 4 e 3.6.
 
@@ -241,3 +241,34 @@ Só `admin_save_block` e `admin_delete_block` são executáveis por `authenticat
 | 5 | Fim antes do início | ✅ Recusado ("O fim tem de ser depois do início") |
 | 6 | Apagar bloqueio | ✅ |
 | 7 | Histórico da sobreposição | ✅ Registado com ator "barbeiro" |
+
+**Teste T-5.4 do Gabriel (2026-11-12): ✅ tudo OK.**
+
+---
+
+## 5.5 — Configurações 🔶 *(falta o teu teste com sessão)*
+
+Segue a Especificação 2.13. Escrita direta na linha única de `settings` (RLS da 5.1). Sem migrations novas.
+
+| Secção | O que permite |
+|---|---|
+| **Barbearia** | Nome da barbearia · **nome do barbeiro** (saudação do Início) · morada · WhatsApp (normalizado para +351…, aceita "912 345 678") · link do Google Maps (tem de ser https) |
+| **Link de marcações** | O endereço do site, **Copiar**, **Partilhar** (menu de partilha do telemóvel; no computador copia) e **código QR** com "Descarregar QR" para imprimir. Não se edita (depende da Vercel) |
+| **Regras de marcação** | Próprio dia · antecedência mínima (horas) · até X dias · grelha · intervalo · máx. por telemóvel · prazo de cancelamento (horas) · tolerância · faltas para ⚠️. **Mesmos limites da base de dados**. "Serviços por marcação: 1" só informativo (mais do que 1 é funcionalidade futura, 2.15) |
+| **Notificações** | Nova marcação · cliente cancelou · resumo do dia + hora · lembrete + minutos. As escolhas ficam gravadas; o envio chega na etapa das notificações |
+| **Conta** | Mudar palavra-passe (5.2) |
+
+**Início:** a saudação passou a usar `settings.owner_name` ("Bom dia, Matheus"). Muda se o nome mudar em Configurações.
+
+**Ficheiros:** `src/lib/telefone.js` (`normalizarTelefone`, `formatarTelefone`, `linkWhatsapp`) · `src/admin/pages/configuracoes/` (`useSettings`, `Mensagem`, `SeccaoBarbearia`, `SeccaoLink`, `SeccaoRegras`, `SeccaoNotificacoes`) · biblioteca `qrcode` (QR gerado no navegador; 0 vulnerabilidades em produção).
+
+**Verificado (2026-11-12):**
+- Telemóveis: "912 345 678", "+351 912345678", "00351912345678", "912-345-678" → `+351912345678` · fixo "212345678" → `+351212345678` · "+44 7700 900123" → `+447700900123` · "12345"/"abc" → recusados ✅
+- Lint e build OK · a página abre sem erros de código (em `?preview` os dados não carregam por falta de sessão, como esperado) ✅
+
+**Teste do Gabriel (T-5.5)**, com sessão:
+1. **Barbearia:** os dados aparecem (nome MR Polo Barber, barbeiro Matheus). Pôr o **WhatsApp e a morada reais**, se já os tiver (resolve parte do P-02), e gravar.
+2. Mudar o nome do barbeiro → o Início mostra o novo nome → repor "Matheus".
+3. **Link:** Copiar · Partilhar (no telemóvel abre o menu) · o QR, lido com a câmara, abre o site.
+4. **Regras:** mudar a tolerância para 15 e gravar → recarregar e confirmar → repor 10. Pôr 100 → aparece o erro do limite.
+5. **Notificações:** desligar e voltar a ligar uma opção e gravar.
