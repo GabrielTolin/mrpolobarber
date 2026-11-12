@@ -1,19 +1,150 @@
 @import "tailwindcss";
 
-/* Visual NEUTRO PROVISÓRIO (Etapa 4.6).
-   A identidade visual da barbearia é o pendente P-12: quando houver cores e
-   tipos de letra definidos, troca-se aqui e todo o site acompanha. */
+/* Sistema visual do MR Polo Barber — tokens do handoff do Claude Design
+   (design/handoff-painel-inicio/README.md). Tema escuro, acento dourado,
+   títulos em Cormorant Garamond, texto em Manrope. */
 @theme {
-  --color-ink: #111111;          /* texto forte, botões primários */
-  --color-ink-muted: #6b6b6b;    /* texto secundário */
-  --color-line: #e2e2e2;         /* linhas e contornos */
-  --color-surface: #ffffff;      /* cartões, barras */
-  --color-canvas: #f6f6f6;       /* fundo das páginas */
-  --color-accent: #111111;       /* acento da marca (provisório = ink) */
+  /* Superfícies */
+  --color-bg: #0d0c0a;            /* fundo da app */
+  --color-sidebar: #000000;       /* menu lateral */
+  --color-hover: #15130f;         /* hover da navegação */
+
+  /* Texto */
+  --color-fg: #ede6d6;            /* texto principal */
+  --color-muted: #a89f8e;         /* secundário */
+  --color-muted-2: #7a7262;       /* terciário */
+  --color-price: #cfc6b4;         /* preços */
+
+  /* Dourado */
+  --color-gold: #e3b955;
+  --color-gold-2: #d9ae4a;        /* eyebrows e links */
+  --color-on-gold: #120f08;       /* texto sobre dourado */
+
+  /* Bordas */
+  --color-line: #2a251c;          /* cartões */
+  --color-line-sidebar: #211d16;
+  --color-line-soft: #1f1b15;     /* divisórias internas */
+  --color-line-btn: #3a3326;      /* botão secundário, campos */
+  --color-line-gold: #6b5426;     /* cartão dourado */
+
+  /* Estados */
+  --color-ok: #9cc59a;            /* confirmada */
+  --color-warn: #e58b6d;          /* avisos e erros */
+
+  /* Poste de barbeiro */
+  --color-pole-red: #c8322b;
+  --color-pole-white: #f1eee8;
+  --color-pole-blue: #2557c7;
+
+  /* Tipos de letra (servidos pelo próprio site, sem pedidos à Google) */
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Manrope Variable', Manrope, system-ui, sans-serif;
 }
 
 html,
 body {
-  background-color: var(--color-canvas);
-  color: var(--color-ink);
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  color-scheme: dark;
+}
+
+@layer components {
+  /* Rótulo pequeno em maiúsculas (ex.: data, "Próxima marcação") */
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-gold-2);
+  }
+
+  /* Cartão base: borda fina, sem sombra */
+  .card {
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .card-gold {
+    border-color: var(--color-line-gold);
+    background: linear-gradient(160deg, #1d180f, #0f0d0a);
+  }
+  .card-title {
+    font-family: var(--font-serif);
+    font-size: 26px;
+    font-weight: 600;
+  }
+
+  /* Botões */
+  .btn-primary,
+  .btn-gold,
+  .btn-ghost {
+    border-radius: 8px;
+    font-family: var(--font-sans);
+    transition: filter 150ms ease, background-color 150ms ease;
+  }
+  .btn-primary {
+    background: linear-gradient(180deg, #e8c45a, #c29434);
+    color: var(--color-on-gold);
+    padding: 13px 22px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .btn-gold {
+    background: var(--color-gold);
+    color: var(--color-on-gold);
+    padding: 11px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-fg);
+    border: 1px solid var(--color-line-btn);
+    padding: 11px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .btn-primary:hover,
+  .btn-gold:hover {
+    filter: brightness(1.08);
+  }
+  .btn-ghost:hover {
+    background-color: var(--color-hover);
+  }
+  .btn-primary:disabled,
+  .btn-gold:disabled,
+  .btn-ghost:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: none;
+  }
+
+  /* Campos de formulário */
+  .field {
+    width: 100%;
+    border: 1px solid var(--color-line-btn);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-fg);
+    padding: 10px 12px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 150ms ease;
+  }
+  .field:focus {
+    border-color: var(--color-gold-2);
+  }
+
+  /* Divisória "poste de barbeiro" — usar com moderação (só no Início) */
+  .pole {
+    height: 4px;
+    border-radius: 2px;
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--color-pole-red) 0 12px,
+      var(--color-pole-white) 12px 19px,
+      var(--color-pole-blue) 19px 31px,
+      var(--color-pole-white) 31px 38px
+    );
+  }
 }

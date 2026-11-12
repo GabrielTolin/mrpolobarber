@@ -2,14 +2,16 @@ import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { LogOut, Menu, X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { NAV_ITENS } from './navegacao'
+import Logo from '../components/Logo'
+import { ICON_PROPS, NAV_ITENS } from './navegacao'
 
 const principais = NAV_ITENS.filter((i) => i.principal)
 const secundarios = NAV_ITENS.filter((i) => !i.principal)
 
-function linkClasses({ isActive }) {
-  return `flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
-    isActive ? 'bg-ink text-white' : 'text-ink hover:bg-canvas'
+// Item da navegação (handoff: padding 11px 14px, raio 8px, texto 14px).
+function navClasses({ isActive }) {
+  return `flex items-center gap-3 rounded-lg px-3.5 py-[11px] text-sm transition-colors ${
+    isActive ? 'bg-gold-2/12 font-semibold text-gold' : 'text-muted hover:bg-hover hover:text-fg'
   }`
 }
 
@@ -19,14 +21,14 @@ export default function AdminLayout() {
   const fecharMais = () => setMaisAberto(false)
 
   return (
-    <div className="min-h-screen md:flex">
-      {/* Menu lateral (ecrãs ≥ 768 px) */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-line bg-surface p-4 md:flex">
-        <div className="mb-6 px-3 text-lg font-semibold">MR Polo Barber</div>
-        <nav className="flex flex-1 flex-col gap-1">
+    <div className="min-h-screen bg-bg lg:flex">
+      {/* Menu lateral (ecrãs ≥ 1024 px) */}
+      <aside className="sticky top-0 hidden h-screen w-62 shrink-0 flex-col border-r border-line-sidebar bg-sidebar px-4 py-5 lg:flex">
+        <Logo className="mx-auto mb-5 w-[180px]" />
+        <nav className="flex flex-col gap-1">
           {NAV_ITENS.map(({ to, label, icon: Icon, end }) => (
-            <NavLink key={to} to={to} end={end} className={linkClasses}>
-              <Icon className="h-5 w-5" aria-hidden />
+            <NavLink key={to} to={to} end={end} className={navClasses}>
+              <Icon {...ICON_PROPS} />
               {label}
             </NavLink>
           ))}
@@ -34,41 +36,41 @@ export default function AdminLayout() {
         <button
           type="button"
           onClick={signOut}
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-ink hover:bg-canvas"
+          className="mt-auto flex items-center gap-3 rounded-lg px-3.5 py-[11px] text-sm text-muted-2 transition-colors hover:bg-hover hover:text-fg"
         >
-          <LogOut className="h-5 w-5" aria-hidden />
+          <LogOut {...ICON_PROPS} />
           Terminar sessão
         </button>
       </aside>
 
       {/* Conteúdo (com espaço para a barra inferior no telemóvel) */}
-      <main className="flex-1 pb-20 md:pb-0">
+      <main className="min-w-0 flex-1 px-4 pt-6 pb-24 sm:px-8 lg:px-12 lg:py-10">
         <Outlet />
       </main>
 
-      {/* Menu "Mais" (telemóvel) */}
+      {/* Menu "Mais" (telemóvel e tablet) */}
       {maisAberto && (
-        <div className="fixed inset-0 z-20 md:hidden">
+        <div className="fixed inset-0 z-20 lg:hidden">
           <button
             type="button"
             aria-label="Fechar menu"
-            className="absolute inset-0 bg-black/30"
+            className="absolute inset-0 bg-black/60"
             onClick={fecharMais}
           />
-          <div className="absolute inset-x-0 bottom-16 rounded-t-2xl border-t border-line bg-surface p-4">
+          <div className="absolute inset-x-0 bottom-16 rounded-t-2xl border-t border-line bg-sidebar p-4">
             <nav className="flex flex-col gap-1">
               {secundarios.map(({ to, label, icon: Icon }) => (
-                <NavLink key={to} to={to} onClick={fecharMais} className={linkClasses}>
-                  <Icon className="h-5 w-5" aria-hidden />
+                <NavLink key={to} to={to} onClick={fecharMais} className={navClasses}>
+                  <Icon {...ICON_PROPS} />
                   {label}
                 </NavLink>
               ))}
               <button
                 type="button"
                 onClick={signOut}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-ink hover:bg-canvas"
+                className="flex items-center gap-3 rounded-lg px-3.5 py-[11px] text-sm text-muted-2 hover:bg-hover hover:text-fg"
               >
-                <LogOut className="h-5 w-5" aria-hidden />
+                <LogOut {...ICON_PROPS} />
                 Terminar sessão
               </button>
             </nav>
@@ -76,8 +78,8 @@ export default function AdminLayout() {
         </div>
       )}
 
-      {/* Barra inferior (telemóvel) */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex h-16 border-t border-line bg-surface md:hidden">
+      {/* Barra inferior (telemóvel e tablet) */}
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex h-16 border-t border-line-sidebar bg-sidebar pb-[env(safe-area-inset-bottom)] lg:hidden">
         {principais.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
@@ -85,23 +87,23 @@ export default function AdminLayout() {
             end={end}
             onClick={fecharMais}
             className={({ isActive }) =>
-              `flex flex-1 flex-col items-center justify-center gap-1 text-xs ${
-                isActive ? 'text-ink' : 'text-ink-muted'
+              `flex flex-1 flex-col items-center justify-center gap-1 text-[11px] ${
+                isActive ? 'font-semibold text-gold' : 'text-muted'
               }`
             }
           >
-            <Icon className="h-5 w-5" aria-hidden />
+            <Icon {...ICON_PROPS} />
             {label}
           </NavLink>
         ))}
         <button
           type="button"
           onClick={() => setMaisAberto((v) => !v)}
-          className={`flex flex-1 flex-col items-center justify-center gap-1 text-xs ${
-            maisAberto ? 'text-ink' : 'text-ink-muted'
+          className={`flex flex-1 flex-col items-center justify-center gap-1 text-[11px] ${
+            maisAberto ? 'font-semibold text-gold' : 'text-muted'
           }`}
         >
-          {maisAberto ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
+          {maisAberto ? <X {...ICON_PROPS} /> : <Menu {...ICON_PROPS} />}
           Mais
         </button>
       </nav>

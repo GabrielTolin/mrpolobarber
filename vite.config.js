@@ -16,9 +16,12 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,webp,woff2}'],
+        // Fonte dos ícones (só serve para os gerar): não vai para a cache do PWA.
+        // Tipos de letra cirílicos/gregos/vietnamitas: só se descarregam se forem precisos.
+        globIgnores: ['**/icon-source.png', '**/*-cyrillic*', '**/*-greek*', '**/*-vietnamese*'],
       },
-      includeAssets: ['favicon.ico', 'logo.svg', 'apple-touch-icon-180x180.png'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
         id: '/admin',
         name: 'MR Polo Barber — Painel',
@@ -30,8 +33,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         orientation: 'portrait',
-        theme_color: '#111111',
-        background_color: '#f6f6f6',
+        theme_color: '#000000',
+        background_color: '#0d0c0a',
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },

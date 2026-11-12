@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<title>Mr. Polo — Painel Início (referência 2b)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0D0C0A; --sidebar:#000; --text:#EDE6D6; --muted:#A89F8E; --muted-2:#7A7262; --price:#CFC6B4;
+  --gold:#E3B955; --gold-2:#D9AE4A; --gold-grad:linear-gradient(180deg,#E8C45A,#C29434); --on-gold:#120F08;
+  --gold-tint:rgba(217,174,74,.12); --gold-tint-row:rgba(217,174,74,.08);
+  --border:#2A251C; --border-sidebar:#211D16; --border-soft:#1F1B15; --border-btn:#3A3326; --border-gold:#6B5426;
+  --hover:#15130F; --card-gold:linear-gradient(160deg,#1D180F,#0F0D0A);
+  --ok:#9CC59A; --warn:#E58B6D;
+  --pole-red:#C8322B; --pole-white:#F1EEE8; --pole-blue:#2557C7;
+  --pole:repeating-linear-gradient(-45deg,var(--pole-red) 0 12px,var(--pole-white) 12px 19px,var(--pole-blue) 19px 31px,var(--pole-white) 31px 38px);
+  --serif:'Cormorant Garamond',Georgia,serif; --sans:Manrope,system-ui,sans-serif;
+  --r-sm:8px; --r-md:12px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans)}
+button{font-family:var(--sans);cursor:pointer}
+.app{display:flex;min-height:100vh}
+/* Sidebar */
+.sidebar{width:248px;flex-shrink:0;background:var(--sidebar);border-right:1px solid var(--border-sidebar);display:flex;flex-direction:column;padding:20px 16px;position:sticky;top:0;height:100vh}
+.logo{width:180px;height:159px;overflow:hidden;position:relative;margin:0 auto 20px}
+.logo img{position:absolute;width:252px;left:-51px;top:-78px}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav a{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-sm);color:var(--muted);font-size:14px;text-decoration:none}
+.nav a:hover{color:var(--text);background:var(--hover)}
+.nav a.active{background:var(--gold-tint);color:var(--gold);font-weight:600}
+.nav svg,.logout svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.logout{margin-top:auto;display:flex;align-items:center;gap:12px;padding:11px 14px;color:var(--muted-2);font-size:14px;text-decoration:none}
+/* Main */
+.main{flex:1;padding:40px 48px;display:flex;flex-direction:column;gap:24px;min-width:0}
+.head{display:flex;flex-direction:column;gap:20px}
+.head-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-2)}
+.h1{font-family:var(--serif);font-size:48px;font-weight:600;line-height:1.05;margin:4px 0 0}
+.head-right{display:flex;align-items:center;gap:32px}
+.stats{display:flex;gap:28px}
+.stat{display:flex;flex-direction:column;align-items:flex-end}
+.stat b{font-family:var(--serif);font-size:34px;font-weight:600;line-height:1}
+.stat b.warn{color:var(--warn)}
+.stat span{font-size:12px;color:var(--muted)}
+.btn-primary{background:var(--gold-grad);color:var(--on-gold);border:0;border-radius:var(--r-sm);padding:13px 22px;font-weight:700;font-size:14px}
+.btn-gold{background:var(--gold);color:var(--on-gold);border:0;border-radius:var(--r-sm);padding:11px;font-weight:700;font-size:13px}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border-btn);border-radius:var(--r-sm);padding:11px;font-weight:600;font-size:13px}
+.pole{height:4px;border-radius:2px;background:var(--pole)}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:28px;flex:1}
+.card{border:1px solid var(--border);border-radius:var(--r-md);padding:24px;display:flex;flex-direction:column}
+.card-title{font-family:var(--serif);font-size:26px;font-weight:600}
+.card-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
+.link{font-size:13px;color:var(--gold-2);text-decoration:none}
+/* Marcações */
+.appts{display:flex;flex-direction:column;gap:8px}
+.appt{display:grid;grid-template-columns:56px 14px 1fr auto 110px;align-items:center;gap:14px;padding:12px;border-radius:var(--r-sm)}
+.appt .time{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.appt .dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.appt .who{display:flex;flex-direction:column;gap:2px;min-width:0}
+.appt .who b{font-size:15px;font-weight:600}
+.appt .who span{font-size:13px;color:var(--muted)}
+.appt .price{font-size:14px;color:var(--price)}
+.appt .status{font-size:12px;text-align:right}
+.appt[data-status=done]{opacity:.55}            .appt[data-status=done] .st{color:var(--muted-2)}
+.appt[data-status=now]{background:var(--gold-tint-row)} .appt[data-status=now] .st{color:var(--gold)}
+.appt[data-status=ok] .st{color:var(--ok)}
+.appt[data-status=pend] .st{color:var(--warn)}
+/* Próxima */
+.right{display:flex;flex-direction:column;gap:28px}
+.next{border-color:var(--border-gold);background:var(--card-gold);gap:14px}
+.next-top{display:flex;justify-content:space-between}
+.next-top .eyebrow{letter-spacing:.16em}
+.next-top span:last-child{font-size:13px;color:var(--muted)}
+.next-main{display:flex;align-items:baseline;gap:16px}
+.next-time{font-family:var(--serif);font-size:56px;font-weight:600;line-height:1;color:var(--gold)}
+.next-main b{display:block;font-size:18px;font-weight:600}
+.next-main span{font-size:14px;color:var(--muted)}
+.next-meta{font-size:13px;color:var(--muted)}
+.next-actions{display:flex;gap:10px}.next-actions button{flex:1}
+/* Pendências */
+.pend{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--border-soft)}
+.pend i{width:6px;height:6px;margin-top:7px;transform:rotate(45deg);background:var(--gold-2);flex-shrink:0}
+.pend div{display:flex;flex-direction:column;gap:2px;flex:1}
+.pend b{font-size:14px;font-weight:600}.pend span{font-size:13px;color:var(--muted)}
+.pend a{font-size:13px;color:var(--gold-2);text-decoration:none}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"><img src="assets/logo.jpg" alt="Mr. Polo Barber Shop"></div>
+    <nav class="nav">
+      <a class="active" href="#"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg>Início</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M3 5h18v16H3zM3 10h18M8 3v4M16 3v4"/></svg>Agenda</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clientes</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Notificações</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM20 4 8.12 15.88M14.47 14.48 20 20M8.12 8.12 12 12"/></svg>Serviços e preços</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2"/></svg>Horários e bloqueios</a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Configurações</a>
+    </nav>
+    <a class="logout" href="#"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Terminar sessão</a>
+  </aside>
+
+  <main class="main">
+    <header class="head">
+      <div class="head-row">
+        <div><div class="eyebrow">Quinta-feira, 12 de novembro</div><h1 class="h1">Bom dia, Mr. Polo</h1></div>
+        <div class="head-right">
+          <div class="stats">
+            <div class="stat"><b>7</b><span>marcações</span></div>
+            <div class="stat"><b>2</b><span>concluídas</span></div>
+            <div class="stat"><b class="warn">2</b><span>por confirmar</span></div>
+          </div>
+          <button class="btn-primary">+ Nova marcação</button>
+        </div>
+      </div>
+      <div class="pole"></div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <div class="card-head"><span class="card-title">Marcações do dia</span><a class="link" href="#">Ver agenda →</a></div>
+        <div class="appts">
+          <div class="appt" data-status="done"><span class="time">09:00</span><span class="dot st"></span><div class="who"><b>Ricardo Mendes</b><span>Corte + Barba · 45 min</span></div><span class="price">25 €</span><span class="status st">Concluída</span></div>
+          <div class="appt" data-status="done"><span class="time">10:00</span><span class="dot st"></span><div class="who"><b>Tiago Ferreira</b><span>Corte clássico · 30 min</span></div><span class="price">15 €</span><span class="status st">Concluída</span></div>
+          <div class="appt" data-status="now"><span class="time">11:30</span><span class="dot st"></span><div class="who"><b>João Almeida</b><span>Barba à navalha · 30 min</span></div><span class="price">12 €</span><span class="status st">Em curso</span></div>
+          <div class="appt" data-status="ok"><span class="time">14:00</span><span class="dot st"></span><div class="who"><b>Miguel Costa</b><span>Corte degradê · 45 min</span></div><span class="price">18 €</span><span class="status st">Confirmada</span></div>
+          <div class="appt" data-status="ok"><span class="time">15:00</span><span class="dot st"></span><div class="who"><b>André Sousa</b><span>Corte + Barba · 45 min</span></div><span class="price">25 €</span><span class="status st">Confirmada</span></div>
+          <div class="appt" data-status="pend"><span class="time">16:30</span><span class="dot st"></span><div class="who"><b>Pedro Santos</b><span>Corte criança · 30 min</span></div><span class="price">12 €</span><span class="status st">Por confirmar</span></div>
+          <div class="appt" data-status="pend"><span class="time">18:00</span><span class="dot st"></span><div class="who"><b>Bruno Lopes</b><span>Corte clássico · 30 min</span></div><span class="price">15 €</span><span class="status st">Por confirmar</span></div>
+        </div>
+      </section>
+
+      <div class="right">
+        <section class="card next">
+          <div class="next-top"><span class="eyebrow">Próxima marcação</span><span>em 2h 15min</span></div>
+          <div class="next-main"><span class="next-time">14:00</span><div><b>Miguel Costa</b><span>Corte degradê · 45 min · 18 €</span></div></div>
+          <div class="next-meta">12.ª visita · último corte há 3 semanas</div>
+          <div class="next-actions"><button class="btn-gold">Ver ficha</button><button class="btn-ghost">Enviar lembrete</button></div>
+        </section>
+        <section class="card">
+          <span class="card-title" style="margin-bottom:12px">Pendências</span>
+          <div class="pend"><i></i><div><b>2 marcações por confirmar</b><span>Pedro Santos · Bruno Lopes</span></div><a href="#">Confirmar</a></div>
+          <div class="pend"><i></i><div><b>Pedido de reagendamento</b><span>Luís Rocha · sex 13, 10:00 → 15:30</span></div><a href="#">Responder</a></div>
+          <div class="pend"><i></i><div><b>Falta sem aviso</b><span>Carlos Neves · ontem, 17:00</span></div><a href="#">Registar</a></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

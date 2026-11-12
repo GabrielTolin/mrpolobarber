@@ -1,12 +1,12 @@
 import { Construction } from 'lucide-react'
 
-// Página provisória da Etapa 4: marca o sítio onde a funcionalidade vai nascer.
+// Conteúdo provisório: marca o sítio onde a funcionalidade vai nascer.
 export default function EmConstrucao({ titulo, descricao }) {
   return (
-    <section className="mx-auto max-w-xl px-4 py-12 text-center">
-      <Construction className="mx-auto mb-4 h-10 w-10 text-ink-muted" aria-hidden />
-      <h1 className="text-2xl font-semibold text-ink">{titulo}</h1>
-      <p className="mt-2 text-ink-muted">{descricao ?? 'Em construção.'}</p>
+    <section className="card mx-auto max-w-xl text-center">
+      <Construction className="mx-auto mb-3 text-muted-2" size={32} strokeWidth={1.8} aria-hidden />
+      {titulo && <h2 className="card-title">{titulo}</h2>}
+      <p className="mt-2 text-sm text-muted">{descricao ?? 'Em construção.'}</p>
     </section>
   )
 }

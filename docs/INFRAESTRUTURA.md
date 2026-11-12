@@ -1,6 +1,6 @@
 # MR Polo Barber — Configuração e Infraestrutura
 
-**Etapa 4 — Configuração e infraestrutura** · Em curso desde 2026-11-11
+**Etapa 4 — Configuração e infraestrutura** · **Validada** a 2026-11-12
 
 Prepara o ambiente onde as funcionalidades vão ser construídas, seguindo a [Arquitetura](ARQUITETURA.md) (validada). **Nesta etapa não se desenvolvem funcionalidades da barbearia.**
 
@@ -15,7 +15,7 @@ Prepara o ambiente onde as funcionalidades vão ser construídas, seguindo a [Ar
 | 4.7 | PWA | ✅ Validado · instalação no iPhone na 4.9 |
 | 4.8 | Vercel | ✅ Validado · https://mrpolobarber.vercel.app |
 | 4.9 | Testes da infraestrutura | ✅ Todos os testes OK (2026-11-12) |
-| 4.10 | Revisão e validação final | 🔶 À espera da validação |
+| 4.10 | Revisão e validação final | ✅ Validado |
 
 **Regra do projeto:** os commits e os pushes são sempre feitos pelo Gabriel. O Claude deixa tudo pronto e sugere a mensagem.
 
@@ -454,7 +454,7 @@ Os testes T-2 a T-8 foram feitos pelo Gabriel a 2026-11-12, no computador e no i
 
 ---
 
-## 4.10 — Revisão e validação final 🔶
+## 4.10 — Revisão e validação final ✅
 
 ### 1. Estrutura do projeto
 
@@ -518,5 +518,5 @@ mrpolobarber/
 
 ### Validação
 
-- [ ] Gabriel valida a Etapa 4 (4.1–4.10)
-- [ ] Etapa 4 fechada → próxima etapa (desenvolvimento funcional)
+- [x] Gabriel valida a Etapa 4 (4.1–4.10) — 2026-11-12
+- [x] Etapa 4 fechada → próxima etapa (desenvolvimento funcional)

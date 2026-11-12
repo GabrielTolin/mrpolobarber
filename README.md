@@ -10,6 +10,7 @@ Sistema de marcações para a barbearia MR Polo Barber (Albufeira): página púb
 | [docs/ESPECIFICACAO.md](docs/ESPECIFICACAO.md) | Etapa 2: como o sistema se comporta, com os critérios de aceitação |
 | [docs/ARQUITETURA.md](docs/ARQUITETURA.md) | Etapa 3: como o sistema é construído (tabelas, segurança, automações) |
 | [docs/INFRAESTRUTURA.md](docs/INFRAESTRUTURA.md) | Etapa 4: configuração e infraestrutura |
+| [docs/PAINEL.md](docs/PAINEL.md) | Etapa 5: painel do barbeiro (inclui o sistema visual) |
 
 ## Tecnologias
 
@@ -42,7 +43,7 @@ npx supabase link --project-ref sxxbenaejbdgadrsavef
 | `npm run db:push` | Aplica as migrations pendentes no projeto Supabase |
 | `npm run db:status` | Mostra que migrations estão aplicadas |
 | `npm run db:lint` | Verifica erros nas funções da base de dados |
-| `npm run icons` | Gera os ícones do PWA a partir de `public/logo.svg` |
+| `npm run icons` | Gera os ícones do PWA a partir de `public/icon-source.png` (logótipo) |
 
 ## Regras do projeto
 

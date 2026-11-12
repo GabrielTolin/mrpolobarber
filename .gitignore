@@ -39,3 +39,6 @@ HANDOFF.md
 # Supabase CLI (estado local)
 supabase/.temp
 supabase/.branches
+
+# Arquivos zip de handoff (o conteúdo está extraído em design/)
+*.zip

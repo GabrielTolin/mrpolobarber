@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import Carregando from '../components/Carregando'
+import Logo from '../components/Logo'
 
 export default function Login() {
   const { session, loading, signIn } = useAuth()
@@ -31,51 +32,46 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-4 rounded-xl border border-line bg-surface p-6"
-      >
+    <div className="flex min-h-screen flex-col items-center justify-center bg-sidebar px-4 py-10">
+      <Logo className="mb-8 w-[200px]" />
+
+      <form onSubmit={handleSubmit} className="card w-full max-w-sm space-y-5 bg-bg">
         <div>
-          <h1 className="text-xl font-semibold text-ink">Painel do barbeiro</h1>
-          <p className="text-sm text-ink-muted">MR Polo Barber</p>
+          <p className="eyebrow">Painel do barbeiro</p>
+          <h1 className="mt-1 font-serif text-[34px] leading-tight font-semibold">Entrar</h1>
         </div>
 
         <label className="block">
-          <span className="text-sm font-medium text-ink">Email</span>
+          <span className="text-sm font-medium text-muted">Email</span>
           <input
             type="email"
             autoComplete="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-line px-3 py-2 outline-none focus:border-ink"
+            className="field mt-1.5"
           />
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium text-ink">Palavra-passe</span>
+          <span className="text-sm font-medium text-muted">Palavra-passe</span>
           <input
             type="password"
             autoComplete="current-password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-line px-3 py-2 outline-none focus:border-ink"
+            className="field mt-1.5"
           />
         </label>
 
         {erro && (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="text-sm text-warn" role="alert">
             {erro}
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={aEntrar}
-          className="w-full rounded-lg bg-ink px-4 py-2 font-medium text-white disabled:opacity-60"
-        >
+        <button type="submit" disabled={aEntrar} className="btn-primary w-full">
           {aEntrar ? 'A entrar…' : 'Entrar'}
         </button>
       </form>

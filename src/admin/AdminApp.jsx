@@ -7,11 +7,11 @@ import {
   Agenda,
   Clientes,
   Configuracoes,
-  Dashboard,
   Horarios,
   Notificacoes,
   Servicos,
 } from './pages/Paginas'
+import Inicio from './pages/Inicio'
 
 // Carregado à parte (React.lazy no App.jsx): quem só marca não descarrega o painel.
 export default function AdminApp() {
@@ -20,7 +20,7 @@ export default function AdminApp() {
       <Route path="login" element={<Login />} />
       <Route element={<RotaAdmin />}>
         <Route element={<AdminLayout />}>
-          <Route index element={<Dashboard />} />
+          <Route index element={<Inicio />} />
           <Route path="agenda" element={<Agenda />} />
           <Route path="clientes" element={<Clientes />} />
           <Route path="notificacoes" element={<Notificacoes />} />
