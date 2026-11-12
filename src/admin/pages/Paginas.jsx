@@ -12,15 +12,6 @@ export function Agenda() {
   )
 }
 
-export function Clientes() {
-  return (
-    <>
-      <CabecalhoPagina titulo="Clientes" />
-      <EmConstrucao descricao="Fichas, habituais, histórico e faltas (2.10)." />
-    </>
-  )
-}
-
 export function Notificacoes() {
   return (
     <>

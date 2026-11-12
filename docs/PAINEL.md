@@ -15,8 +15,8 @@ Construir o PWA do barbeiro: autenticação, dashboard, agenda, clientes, servi�
 | 5.2 | Autenticação (mudar palavra-passe) | ✅ Testado pelo Gabriel e validado |
 | 5.3 | Serviços e preços | ✅ Testado pelo Gabriel e validado |
 | 5.4 | Horários e bloqueios | ✅ Testado pelo Gabriel e validado |
-| 5.5 | Configurações | 🔶 Feito · falta o teu teste com sessão |
-| 5.6 | Clientes | ⏳ |
+| 5.5 | Configurações | ✅ Testado pelo Gabriel e validado |
+| 5.6 | Clientes | 🔶 Feito · falta o teu teste com sessão |
 | 5.7 | Motor da agenda (backend) | ⏳ |
 | 5.8 | Agenda | ⏳ |
 | 5.9 | Estados automáticos | ⏳ |
@@ -246,7 +246,7 @@ Só `admin_save_block` e `admin_delete_block` são executáveis por `authenticat
 
 ---
 
-## 5.5 — Configurações 🔶 *(falta o teu teste com sessão)*
+## 5.5 — Configurações ✅
 
 Segue a Especificação 2.13. Escrita direta na linha única de `settings` (RLS da 5.1). Sem migrations novas.
 
@@ -272,3 +272,39 @@ Segue a Especificação 2.13. Escrita direta na linha única de `settings` (RLS 
 3. **Link:** Copiar · Partilhar (no telemóvel abre o menu) · o QR, lido com a câmara, abre o site.
 4. **Regras:** mudar a tolerância para 15 e gravar → recarregar e confirmar → repor 10. Pôr 100 → aparece o erro do limite.
 5. **Notificações:** desligar e voltar a ligar uma opção e gravar.
+
+**Teste T-5.5 do Gabriel (2026-11-12): ✅ tudo OK.**
+
+---
+
+## 5.6 — Clientes 🔶 *(falta o teu teste com sessão)*
+
+Segue a Especificação 2.2, 2.10 e os Requisitos 1.6–1.8. Escrita direta na tabela `clients` (RLS da 5.1). Sem migrations novas.
+
+### Lista (`/admin/clientes`)
+- **Pesquisa** por nome ou por telemóvel (a partir de 3 dígitos).
+- Cada cliente: nome, telemóvel, nº de visitas, etiquetas **Habitual** e **Bloqueado**, e **⚠️** quando as faltas chegam ao limite das Configurações (2 por defeito).
+- **+ Novo cliente:** só o nome é obrigatório; telemóvel opcional (normalizado para +351…); interruptor Habitual. Se o telemóvel já existir: **"Este número já pertence a [nome]."** (2.10). Ao criar, abre a ficha.
+
+### Ficha (`/admin/clientes/:id`)
+| Bloco | Conteúdo |
+|---|---|
+| Dados | Telemóvel · **Habitual / local** ou Visitante · Bloqueado online · ⚠️ faltas · botão **WhatsApp** · **Editar** (nome, telemóvel, habitual) |
+| Números | Visitas (concluídas) · **faltas** · **cancelamentos tardios** — calculados das marcações (3.2) · última visita · cliente desde |
+| Notas internas | Texto livre, só o barbeiro vê |
+| Marcação online | **Bloquear / Desbloquear** (com confirmação). Bloqueado → a página pública pede para contactar por WhatsApp (2.1) |
+| Histórico | Todas as marcações, mais recentes primeiro: data/hora, serviço, origem, preço e **estado** ("Concluída", "Falta", "Cancelada pelo cliente", "Cancelamento tardio"…) |
+| Apagar | Só aparece se o cliente **nunca teve marcações** (FK, 3.3) |
+
+### Estados (`src/lib/estados.js`)
+`estadoEfetivo()` mostra o estado **pela hora** (3.8): uma marcação confirmada que já começou aparece "Em curso", mesmo antes de o cron correr. Também `descreverEstado()` (com o detalhe do cancelamento, 2.3), cores do design e `ORIGENS`.
+
+**Verificado (2026-11-12):** estados efetivos antes/durante/depois, falta e cancelamentos ✅ · lint e build OK ✅ · as duas páginas abrem sem erros de código (sem dados em `?preview`, como esperado) ✅
+
+**Teste do Gabriel (T-5.6)**, com sessão:
+1. **Novo cliente** "Teste Um" com o teu telemóvel e Habitual ligado → abre a ficha com "Habitual / local".
+2. **Novo cliente** "Teste Dois" com **o mesmo telemóvel** → "Este número já pertence a Teste Um."
+3. Criar "Teste Dois" **sem telemóvel** → aceita.
+4. Na lista, **pesquisar** por "teste" e por 3 dígitos do telemóvel.
+5. Na ficha do Teste Um: **editar** (desligar Habitual) · gravar **notas** · **Bloquear** e Desbloquear · o botão **WhatsApp** abre a conversa.
+6. **Apagar** os dois clientes de teste (sem marcações, aparece "Apagar cliente").
