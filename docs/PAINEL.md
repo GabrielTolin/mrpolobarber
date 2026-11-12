@@ -16,8 +16,8 @@ Construir o PWA do barbeiro: autenticação, dashboard, agenda, clientes, servi�
 | 5.3 | Serviços e preços | ✅ Testado pelo Gabriel e validado |
 | 5.4 | Horários e bloqueios | ✅ Testado pelo Gabriel e validado |
 | 5.5 | Configurações | ✅ Testado pelo Gabriel e validado |
-| 5.6 | Clientes | 🔶 Feito · falta o teu teste com sessão |
-| 5.7 | Motor da agenda (backend) | ⏳ |
+| 5.6 | Clientes | ✅ Testado pelo Gabriel e validado |
+| 5.7 | Motor da agenda (backend) | ✅ Aplicada e testada (13/13) · à espera da tua validação |
 | 5.8 | Agenda | ⏳ |
 | 5.9 | Estados automáticos | ⏳ |
 | 5.10 | Dashboard (Início com dados reais) | ⏳ |
@@ -277,7 +277,7 @@ Segue a Especificação 2.13. Escrita direta na linha única de `settings` (RLS 
 
 ---
 
-## 5.6 — Clientes 🔶 *(falta o teu teste com sessão)*
+## 5.6 — Clientes ✅
 
 Segue a Especificação 2.2, 2.10 e os Requisitos 1.6–1.8. Escrita direta na tabela `clients` (RLS da 5.1). Sem migrations novas.
 
@@ -308,3 +308,44 @@ Segue a Especificação 2.2, 2.10 e os Requisitos 1.6–1.8. Escrita direta na t
 4. Na lista, **pesquisar** por "teste" e por 3 dígitos do telemóvel.
 5. Na ficha do Teste Um: **editar** (desligar Habitual) · gravar **notas** · **Bloquear** e Desbloquear · o botão **WhatsApp** abre a conversa.
 6. **Apagar** os dois clientes de teste (sem marcações, aparece "Apagar cliente").
+
+**Teste T-5.6 do Gabriel (2026-11-12): ✅ tudo OK.**
+
+---
+
+## 5.7 — Motor da agenda (backend) ✅
+
+Migration `20261112105011_agenda_engine`, segundo a Arquitetura 3.6 e a Especificação 2.2–2.6. **Só backend**: o ecrã da Agenda é a 5.8.
+
+| Parte | Funções |
+|---|---|
+| **Mensagens em português** (pendente da 5.1) | `status_label()` · `appointments_guard()` reescrita: "Uma marcação **cancelada** já não pode ser alterada", "Não é possível passar de … para …" |
+| **Cálculo de horários** (2.4) | `day_windows(data)`: janelas de trabalho (feriado → nenhuma; dia especial substitui tudo; senão semana − pausas) · `busy_between()`: marcações ativas + bloqueios + intervalo · **`available_slots(serviço, data)`**: grelha + encaixe, cabe inteiro, antecedência, limite de dias · `within_working_hours()` |
+| **Marcações do painel** | **`admin_save_booking`**: criar/editar com **avisos** (fora do horário, conflitos com marcações e bloqueios); com confirmação grava e marca a sobreposição como intencional; preço sugerido pela categoria do cliente (habitual/visitante) ou indicado à mão; editar mantém a duração e o preço se o serviço não mudar · **`admin_cancel_booking`** (com opção tardio) · **`admin_set_cancelled_late`** · **`admin_mark_no_show`** · **`admin_add_note`** |
+| Auxiliares | `conflicts_between()` |
+
+Tudo passa pela **fila da agenda** e verifica `is_admin()`. Executáveis por `authenticated`: as 5 funções `admin_*` e `available_slots`. **O público ainda não tem acesso**: as funções públicas (`create_booking`, link pessoal, preço, limites de pedidos) ficam para a área pública.
+
+**Teste preparado** (`teste_motor_57.sql`, transação desfeita no fim), 13 verificações: não-admin recusado · horários de um dia vazio (09:00 … 12:30, sem 12:45, 14:00 … 18:30) · marcação sem avisos com preço de visitante · **encaixe 09:35** · conflito sem e com confirmação · fora do horário (almoço) · trocar serviço (duração, preço, histórico) · cancelamento tardio · mensagem em português · falta futura recusada · nota interna · horário libertado depois de cancelar.
+
+### Aplicada e testada (2026-11-12) ✅
+
+**Permissões reais:** as 5 funções `admin_*` e `available_slots` executáveis só por `authenticated` (verificam `is_admin()`) · `day_windows`, `busy_between`, `conflicts_between`, `within_working_hours`, `status_label` e o `appointments_guard` reescrito: por ninguém · **nada para `anon`** · `db:lint` sem erros.
+
+**Teste do motor** (`teste_motor_57.sql`, transação desfeita; dia de teste 13/11/2026). A base de dados ficou a zero:
+
+| # | Teste | Resultado |
+|---|---|---|
+| 0 | Conta que não é admin | ✅ Recusada |
+| 1 | Horários livres de Barba num dia vazio | ✅ 09:00 … **12:30 sim, 12:45 não** (atravessaria o almoço) · 14:00 … **18:30** (último) |
+| 2 | Marcação sem avisos | ✅ Grava logo · **17 € (visitante)** · fim 09:35 |
+| 3 | **Encaixe** | ✅ Lista começa em **09:35**, 09:45, 10:00… |
+| 4 | Conflito sem confirmar | ✅ Não grava, 1 conflito |
+| 5 | Conflito confirmado | ✅ Grava como sobreposição intencional |
+| 6 | Fora do horário (13:15, almoço) | ✅ Aviso, não grava |
+| 7 | Trocar serviço (máquina → barba) | ✅ Fim 09:25 · 9 € · histórico do serviço |
+| 8 | Cancelamento tardio | ✅ |
+| 9 | Editar uma cancelada | ✅ Recusado, **"Uma marcação cancelada já não pode ser alterada"** |
+| 10 | Falta numa marcação futura | ✅ Recusada |
+| 11 | Nota interna | ✅ No histórico, ator barbeiro |
+| 12 | Horário libertado depois de cancelar | ✅ 09:25 (encaixe), 09:30, 09:45 |
