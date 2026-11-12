@@ -13,7 +13,7 @@ Prepara o ambiente onde as funcionalidades vão ser construídas, seguindo a [Ar
 | 4.5 | Segurança inicial | ✅ Feito (migration aplicada + Auth configurado) |
 | 4.6 | Estrutura da aplicação | ✅ Feito (frontend + migrations admins_is_admin e correção) |
 | 4.7 | PWA | ✅ Validado · instalação no iPhone na 4.9 |
-| 4.8 | Vercel | 🔶 vercel.json pronto · falta o deploy do Gabriel |
+| 4.8 | Vercel | ✅ No ar em https://mrpolobarber.vercel.app (à espera da tua validação) |
 | 4.9 | Testes da infraestrutura | ⏳ |
 | 4.10 | Revisão e validação final | ⏳ |
 
@@ -365,7 +365,7 @@ O SW **não corre em `npm run dev`** (só na build). Para testar o PWA localment
 
 ---
 
-## 4.8 — Vercel 🔶 *(vercel.json pronto, falta o deploy do Gabriel)*
+## 4.8 — Vercel ✅
 
 ### `vercel.json` (preparado)
 
@@ -397,3 +397,24 @@ Verificado: o JSON é válido e a build **não tem scripts embutidos**, por isso
 7. Enviar ao Claude o **endereço final**, para verificar os cabeçalhos, as rotas e o PWA (4.9).
 
 A `VITE_VAPID_PUBLIC_KEY` só é acrescentada quando o push for implementado.
+
+### Deploy (2026-11-12)
+
+**Endereço:** **https://mrpolobarber.vercel.app** (projeto `mrpolobarber` na Vercel, ligado ao GitHub, deploy automático a cada push na `main`).
+
+**Variáveis de ambiente:** `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` (publicável), tipo **Config** (valores não sensíveis), em **Production**. A Vercel avisa sobre o prefixo `VITE_` ("expõe ao browser"): é **esperado e seguro**, porque são valores públicos por natureza e o acesso é limitado pelo RLS e pela base de segurança.
+
+**Problema no 1.º deploy e correção:** o 1.º deploy foi feito **antes** de as variáveis existirem, por isso o código não tinha a ligação ao Supabase, e o painel abria em branco (ficheiro do painel em falta, servido como HTML). Corrigido com **Redeploy sem build cache**. Lição: **depois de criar ou alterar variáveis na Vercel, é sempre preciso um redeploy.**
+
+### Verificado depois do redeploy
+
+| Teste | Resultado |
+|---|---|
+| Cabeçalhos (CSP, HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy) | ✅ Todos presentes, iguais ao `vercel.json` |
+| Rotas da SPA (`/admin/agenda`, `/m/abc123`, `/nao-existe`) | ✅ 200 |
+| PWA: `manifest.webmanifest`, `sw.js`, `registerSW.js`, ícones | ✅ 200 com os tipos certos · service worker registado e ativo |
+| Cache | ✅ `/assets/*` imutável 1 ano · `sw.js`, manifest e `index.html` sem cache |
+| Ficheiros coerentes | ✅ `index-BwKYHcKH.js` → `AdminApp-DNg0SmyU.js` (200), iguais à build local e à lista do service worker |
+| Variáveis no código | ✅ URL do projeto e chave publicável presentes · **nenhuma chave secreta** (o texto `sb_secret_` no código é da biblioteca supabase-js) |
+| `/admin/agenda` sem sessão | ✅ Redireciona para `/admin/login` |
+| Login com dados errados | ✅ "Email ou palavra-passe incorretos." (o pedido ao Supabase passa pela CSP e é recusado pelo Auth com 400, como esperado) |
