@@ -13,9 +13,9 @@ Prepara o ambiente onde as funcionalidades vão ser construídas, seguindo a [Ar
 | 4.5 | Segurança inicial | ✅ Feito (migration aplicada + Auth configurado) |
 | 4.6 | Estrutura da aplicação | ✅ Feito (frontend + migrations admins_is_admin e correção) |
 | 4.7 | PWA | ✅ Validado · instalação no iPhone na 4.9 |
-| 4.8 | Vercel | ✅ No ar em https://mrpolobarber.vercel.app (à espera da tua validação) |
-| 4.9 | Testes da infraestrutura | ⏳ |
-| 4.10 | Revisão e validação final | ⏳ |
+| 4.8 | Vercel | ✅ Validado · https://mrpolobarber.vercel.app |
+| 4.9 | Testes da infraestrutura | ✅ Todos os testes OK (2026-11-12) |
+| 4.10 | Revisão e validação final | 🔶 À espera da validação |
 
 **Regra do projeto:** os commits e os pushes são sempre feitos pelo Gabriel. O Claude deixa tudo pronto e sugere a mensagem.
 
@@ -418,3 +418,105 @@ A `VITE_VAPID_PUBLIC_KEY` só é acrescentada quando o push for implementado.
 | Variáveis no código | ✅ URL do projeto e chave publicável presentes · **nenhuma chave secreta** (o texto `sb_secret_` no código é da biblioteca supabase-js) |
 | `/admin/agenda` sem sessão | ✅ Redireciona para `/admin/login` |
 | Login com dados errados | ✅ "Email ou palavra-passe incorretos." (o pedido ao Supabase passa pela CSP e é recusado pelo Auth com 400, como esperado) |
+
+---
+
+## 4.9 — Testes da infraestrutura ✅
+
+### Testes automáticos (Claude, 2026-11-12) ✅
+
+| Área | Teste | Resultado |
+|---|---|---|
+| Execução local | `npm run lint` · `npm run build` | ✅ Sem avisos · build OK, 20 ficheiros no precache do PWA |
+| Execução local | Rotas e login com dados errados em `npm run dev` (4.6) | ✅ |
+| Migrations | `db:status` | ✅ 3 migrations, local = remoto |
+| Migrations | `db:lint` | ✅ Sem erros |
+| Supabase | Auth `/health` | ✅ 200 |
+| Supabase | Registo público (`/signup`) | ✅ **Recusado: 422 `signup_disabled`** |
+| Supabase | Fornecedores de login | ✅ Só email |
+| Segurança | Visitante sem sessão chama `is_admin` · lê `admins` | ✅ 401 · 401 |
+| Deploy | Site, cabeçalhos, rotas, PWA, cache, variáveis, login com erro (4.8) | ✅ |
+
+### Testes com o Gabriel
+
+| # | Teste | Como | Estado |
+|---|---|---|---|
+| T-1 | **Conta de administrador** (G-3) | 2 contas criadas pelo Gabriel (Add user, confirmadas). A de teste do Gabriel registada em `admins` por SQL (2026-11-12). **Trocar pela do barbeiro antes do lançamento** | ✅ |
+| T-2 | **Login a sério** e painel | Entrar em `/admin/login` com a conta de T-1 → painel com a navegação | ✅ |
+| T-3 | **Sessão persistente** | Fechar e reabrir → continua com sessão | ✅ |
+| T-4 | **"Sem acesso"** | Entrar com uma 2.ª conta que **não** está em `admins` | ✅ |
+| T-5 | **Terminar sessão** | Menu "Mais" → Terminar sessão → volta ao login | ✅ |
+| T-6 | **Instalar o PWA no iPhone** | Safari → Partilhar → Adicionar ao ecrã principal → abre em `/admin` em modo app, com o ícone "MR" | ✅ |
+| T-7 | **Login dentro do PWA** e reabrir | A sessão mantém-se no PWA (3.9) | ✅ |
+| T-8 | **Auth: confirmar definições** | "Secure password change" desligado · mínimo 8 caracteres (4.5) | ✅ |
+
+Os testes T-2 a T-8 foram feitos pelo Gabriel a 2026-11-12, no computador e no iPhone (PWA instalado). **Todos OK.**
+
+---
+
+## 4.10 — Revisão e validação final 🔶
+
+### 1. Estrutura do projeto
+
+```
+mrpolobarber/
+├─ docs/            REQUISITOS · ESPECIFICACAO · ARQUITETURA · INFRAESTRUTURA
+├─ public/          logo.svg (provisório) + ícones PWA gerados + favicon
+├─ src/
+│  ├─ main.jsx · App.jsx · index.css (cores em @theme) · sw.js (service worker)
+│  ├─ lib/          supabase.js
+│  ├─ contexts/     AuthContext.jsx · auth.js
+│  ├─ hooks/        useAuth.js
+│  ├─ components/   Carregando · EmConstrucao
+│  ├─ public/       PublicLayout · Marcar · LinkPessoal · NaoEncontrado
+│  └─ admin/        AdminApp · AdminLayout · RotaAdmin · Login · SemAcesso · navegacao · pages/
+├─ supabase/
+│  ├─ config.toml
+│  └─ migrations/   security_baseline · admins_is_admin · fix_function_default_privileges
+├─ vercel.json · vite.config.js · pwa-assets.config.js · package.json (Node 22)
+└─ README.md · .gitignore · .gitattributes · .nvmrc · .vscode/extensions.json · .env.example
+```
+
+### 2. Configurações confirmadas
+
+| Componente | Estado |
+|---|---|
+| Git / GitHub | `main` ↔ `GabrielTolin/mrpolobarber` (privado), sincronizado |
+| Supabase | Projeto `sxxbenaejbdgadrsavef`, 3 migrations, CLI 3.1 com `db:*` em `--remote` |
+| Auth | Registos desligados · só email · "Secure password change" desligado · mínimo 8 · URLs do site e localhost |
+| Administrador | 1 linha em `admins` (conta de teste do Gabriel) |
+| Vercel | `https://mrpolobarber.vercel.app` · deploy automático na `main` · 2 variáveis públicas |
+| PWA | Instalado e testado no iPhone (abre em `/admin`, sessão persistente) |
+
+### 3. Segurança
+
+| Verificação | Estado |
+|---|---|
+| Público sem acesso a tabelas nem funções (por defeito, agora e no futuro) | ✅ Testado (401) |
+| Registo público recusado | ✅ `signup_disabled` |
+| Conta sem ser admin → "Sem acesso" | ✅ T-4 |
+| Nenhuma chave secreta no site, no Git nem na Vercel | ✅ |
+| Cabeçalhos de segurança (CSP, HSTS…) | ✅ |
+| Dependências de produção | ✅ 0 vulnerabilidades (avisos só em ferramentas de build) |
+
+**Falha encontrada e corrigida durante a etapa:** as permissões por defeito das funções (4.6). Ficou a regra de verificar sempre as permissões reais depois de criar funções.
+
+### 4. Pendentes que passam para a frente
+
+| # | Pendente | Quando |
+|---|---|---|
+| P-12 | **Identidade visual** (logótipo, cores, tipos de letra) | Antes de desenhar a área pública |
+| G-3 | **Trocar o administrador** de teste pela conta do barbeiro | Antes do lançamento |
+| G-4 | Chaves VAPID + segredos da Edge Function | Quando se implementar o push |
+| P-02 · P-03 · P-04 | Morada/mapa/WhatsApp · dados RGPD · política de privacidade | Antes do lançamento |
+| P-01 · P-05 | Preços de visitante · Carnaval | Editáveis no painel |
+| — | Variáveis da Vercel também em **Preview** (opcional) | Se se usarem branches de teste |
+
+### 5. Pronto para o desenvolvimento funcional?
+
+**Sim.** O ambiente local, a base de dados, a segurança, o login, o PWA e o deploy estão a funcionar e testados. As funcionalidades da barbearia (tabelas, horários, marcações, painel, notificações) seguem a ordem da **Arquitetura 3.11**.
+
+### Validação
+
+- [ ] Gabriel valida a Etapa 4 (4.1–4.10)
+- [ ] Etapa 4 fechada → próxima etapa (desenvolvimento funcional)
