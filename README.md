@@ -42,6 +42,7 @@ npx supabase link --project-ref sxxbenaejbdgadrsavef
 | `npm run db:push` | Aplica as migrations pendentes no projeto Supabase |
 | `npm run db:status` | Mostra que migrations estão aplicadas |
 | `npm run db:lint` | Verifica erros nas funções da base de dados |
+| `npm run icons` | Gera os ícones do PWA a partir de `public/logo.svg` |
 
 ## Regras do projeto
 

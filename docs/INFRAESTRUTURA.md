@@ -12,8 +12,8 @@ Prepara o ambiente onde as funcionalidades vão ser construídas, seguindo a [Ar
 | 4.4 | Migrations | ✅ Fluxo validado |
 | 4.5 | Segurança inicial | ✅ Feito (migration aplicada + Auth configurado) |
 | 4.6 | Estrutura da aplicação | ✅ Feito (frontend + migrations admins_is_admin e correção) |
-| 4.7 | PWA | ⏳ |
-| 4.8 | Vercel | ⏳ |
+| 4.7 | PWA | ✅ Validado · instalação no iPhone na 4.9 |
+| 4.8 | Vercel | 🔶 vercel.json pronto · falta o deploy do Gabriel |
 | 4.9 | Testes da infraestrutura | ⏳ |
 | 4.10 | Revisão e validação final | ⏳ |
 
@@ -35,7 +35,7 @@ Prepara o ambiente onde as funcionalidades vão ser construídas, seguindo a [Ar
 | Supabase CLI | **3.1.0**, ligada ao projeto `sxxbenaejbdgadrsavef` (eu-west-1, PostgreSQL 17) |
 | `supabase/migrations/` | Vazia |
 | Dev server | Porta **5174** · configuração `mrpolobarber` em `Desktop\.claude\launch.json` |
-| `vercel.json` | Só a reescrita da SPA (faltam os cabeçalhos de segurança, 4.8) |
+| `vercel.json` | Rotas da SPA + cabeçalhos de segurança + cache (4.8) |
 | Git | `main` ligada a `origin` (GitHub privado), 1.º commit `637f36e` |
 | VS Code | `.vscode/extensions.json` com extensões recomendadas |
 
@@ -308,3 +308,92 @@ src/
 | `db:lint` / `db:status` | Sem erros / 3 migrations iguais local = remoto |
 
 **Lição registada:** depois de criar funções, verificar sempre as permissões reais (`proacl`) e não só confiar nas regras por defeito.
+
+---
+
+## 4.7 — PWA ✅
+
+Segue a 3.1 (decisão 8) e a 3.10. A instalação real no iPhone precisa de HTTPS e é testada na **4.9**, depois do deploy na Vercel (4.8).
+
+### Instalado
+| Pacote | Uso |
+|---|---|
+| `vite-plugin-pwa` 2.0 (+ `workbox-build`, `workbox-window`) | Gera o manifest, injeta a lista de ficheiros no service worker e regista-o |
+| `workbox-precaching`, `workbox-routing`, `workbox-core` | Usados dentro do service worker |
+| `@vite-pwa/assets-generator` 2.0 | Gera os ícones a partir de `public/logo.svg` (`npm run icons`) |
+
+`npm audit`: **0 vulnerabilidades nas dependências de produção**. Há avisos moderados só em ferramentas de build (`glob`, `minimatch`, `deepmerge`, via `workbox-build`), que não vão para o site.
+
+### Manifest (`vite.config.js`)
+| Campo | Valor |
+|---|---|
+| Nome / nome curto | MR Polo Barber — Painel / **MR Polo** |
+| `start_url` / `id` | **`/admin`** (o PWA abre sempre no painel) |
+| `scope` | `/` |
+| `display` | `standalone` (sem barra do navegador) · retrato |
+| Cores | tema `#111111` · fundo `#f6f6f6` (provisórias, P-12) |
+| Ícones | 64, 192, 512 e 512 *maskable* (Android/Chrome) |
+
+### Ícones (provisórios)
+- `public/logo.svg`: **"MR" branco em fundo preto**, desenhado com traços para não depender de tipos de letra. Fica dentro da zona segura dos ícones *maskable*.
+- Gerados: `pwa-64/192/512`, `maskable-icon-512`, `apple-touch-icon-180` (iPhone), `favicon.ico`. O `favicon.svg` do template do Vite foi removido.
+- **Para trocar quando houver identidade visual (P-12):** substituir `public/logo.svg` e correr `npm run icons`.
+
+### Service worker (`src/sw.js`, modo `injectManifest`)
+- **Pré-carrega** os 20 ficheiros do site (~500 kB) e funciona sem rede depois da 1.ª visita.
+- **Rotas da SPA:** qualquer endereço (`/admin/agenda`, `/m/…`) devolve o `index.html`.
+- **Atualização automática** (`autoUpdate` + `skipWaiting` + `clientsClaim`): uma versão nova entra sozinha.
+- **Já preparado para o push** (3.10): o evento `push` mostra a notificação e atualiza o **badge** com o nº de não lidas (`setAppBadge`); `notificationclick` abre o PWA no endereço da notificação.
+- Os pedidos ao Supabase não passam pela cache (são de outro domínio).
+
+### `index.html`
+`lang="pt-PT"`, título, descrição, `theme-color`, favicon, **`apple-touch-icon`** e as meta tags do iPhone (`apple-mobile-web-app-capable`, título "MR Polo", barra de estado preta).
+
+### Verificado (versão de produção, `npm run preview` em :4174)
+| Teste | Resultado |
+|---|---|
+| `manifest.webmanifest` | 200, `application/manifest+json`, ligado no `index.html` |
+| `sw.js` | 200 · **registado, ativo e a controlar a página** (scope `/`) |
+| Ícone 192 | 200 |
+| Rota profunda `/admin/agenda` | 200 |
+| Consola | Sem erros |
+| Lint | Sem avisos |
+
+O SW **não corre em `npm run dev`** (só na build). Para testar o PWA localmente: `npm run build` + `npm run preview`.
+
+**Ainda por testar (4.9, com HTTPS):** "Adicionar ao ecrã principal" no iPhone, abrir em `/admin` em modo app, o ícone no ecrã principal.
+
+---
+
+## 4.8 — Vercel 🔶 *(vercel.json pronto, falta o deploy do Gabriel)*
+
+### `vercel.json` (preparado)
+
+| Parte | Conteúdo |
+|---|---|
+| Build | `framework: vite` · `npm run build` · saída `dist` · Node 22 (do `engines` do `package.json`) |
+| **Rotas da SPA** | Tudo o que não é ficheiro → `index.html` (ex.: `/admin/agenda`, `/m/…`) |
+| **CSP** | Só scripts, estilos, imagens e tipos de letra do próprio site. Ligações só ao Supabase **deste** projeto (`https` + `wss`). Service worker e manifest do próprio site. Não pode ser embutido noutros sites (`frame-ancestors 'none'`) |
+| Outros cabeçalhos | HSTS (2 anos) · `X-Frame-Options: DENY` · `nosniff` · `Referrer-Policy` · `Permissions-Policy` (sem GPS, câmara, microfone nem pagamentos) |
+| **Cache** | `/assets/*` com cache de 1 ano (os nomes mudam a cada build) · `sw.js`, `registerSW.js`, `manifest.webmanifest` e `index.html` **sem cache**, para as atualizações do PWA chegarem logo |
+
+Verificado: o JSON é válido e a build **não tem scripts embutidos**, por isso a CSP `script-src 'self'` não bloqueia nada.
+
+### Passos do Gabriel na Vercel (G-5)
+
+1. **Fazer commit e push** do que está pendente (4.7 + `vercel.json`).
+2. Em vercel.com → **Add New… → Project** → importar o repositório **`GabrielTolin/mrpolobarber`** (dar acesso ao repositório privado se for pedido).
+3. **Project Name:** `mrpolobarber` → o endereço fica `https://mrpolobarber.vercel.app` (se o nome estiver ocupado, a Vercel sugere outro; nesse caso **avisar o Claude**, porque é preciso acertar os URLs do Auth da 4.5).
+4. **Framework Preset:** Vite (detetado). Build e Output ficam como estão (vêm do `vercel.json`).
+5. **Environment Variables** (Production, Preview e Development):
+
+   | Nome | Valor |
+   |---|---|
+   | `VITE_SUPABASE_URL` | `https://sxxbenaejbdgadrsavef.supabase.co` |
+   | `VITE_SUPABASE_ANON_KEY` | a chave **publicável** (`sb_publishable_…`), a mesma do `.env.local` |
+
+   ⚠️ Nunca pôr aqui a chave secreta (`sb_secret_…`) nem a `service_role`.
+6. **Deploy**.
+7. Enviar ao Claude o **endereço final**, para verificar os cabeçalhos, as rotas e o PWA (4.9).
+
+A `VITE_VAPID_PUBLIC_KEY` só é acrescentada quando o push for implementado.
