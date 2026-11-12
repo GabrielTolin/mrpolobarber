@@ -6,12 +6,12 @@ import NaoEncontrado from '../public/NaoEncontrado'
 import {
   Agenda,
   Clientes,
-  Configuracoes,
   Horarios,
   Notificacoes,
-  Servicos,
 } from './pages/Paginas'
 import Inicio from './pages/Inicio'
+import Configuracoes from './pages/Configuracoes'
+import Servicos from './pages/Servicos'
 
 // Carregado à parte (React.lazy no App.jsx): quem só marca não descarrega o painel.
 export default function AdminApp() {

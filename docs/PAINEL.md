@@ -11,9 +11,9 @@ Construir o PWA do barbeiro: autenticação, dashboard, agenda, clientes, servi�
 | Subetapa | Tema | Estado |
 |---|---|---|
 | 5.0 | Sistema visual (design) | ✅ Validado |
-| 5.1 | Base de dados do núcleo | 🔶 Aplicada e verificada · falta o teste das regras automáticas |
-| 5.2 | Autenticação (mudar palavra-passe) | ⏳ |
-| 5.3 | Serviços e preços | ⏳ |
+| 5.1 | Base de dados do núcleo | ✅ Validado |
+| 5.2 | Autenticação (mudar palavra-passe) | ✅ Testado pelo Gabriel e validado |
+| 5.3 | Serviços e preços | 🔶 Feito · falta o teu teste com dados reais |
 | 5.4 | Horários e bloqueios | ⏳ |
 | 5.5 | Configurações | ⏳ |
 | 5.6 | Clientes | ⏳ |
@@ -78,7 +78,7 @@ Computador 1440 px e telemóvel 375 px (Início, login), lint sem avisos, build 
 
 ---
 
-## 5.1 — Base de dados do núcleo 🔶
+## 5.1 — Base de dados do núcleo ✅
 
 Quatro migrations, seguindo a Arquitetura 3.2–3.8 sem decisões novas (exceto `owner_name`, já aceite):
 
@@ -103,3 +103,82 @@ As 4 migrations foram aplicadas sem erros (`db:push`). Há agora 7 migrations, i
 | Permissões das funções novas | Nenhuma executável por `anon` nem `authenticated` (só `is_admin` para `authenticated`, como previsto) ✅ |
 | Visitante sem sessão, 15 tabelas | **401 em todas** ✅ |
 | Visitante sem sessão chama `ensure_holidays` / `easter_date` | **401** ✅ |
+
+### Teste das regras automáticas (2026-11-12) ✅
+
+Corrido numa transação **desfeita no fim** (a base de dados ficou igual: 0 clientes, 0 marcações, 0 eventos, 5 serviços). Script: `teste_regras_51.sql` (scratchpad do Claude).
+
+| # | Teste | Resultado |
+|---|---|---|
+| 1 | Criar marcação → histórico "criada" | ✅ |
+| 2 | Mudar o preço → histórico "2000 → 1800" | ✅ |
+| 3 | Apagar marcação | ✅ Recusado |
+| 4 | Criar marcação já "concluída" | ✅ Recusado |
+| 5a | Marcação sobreposta normal | ✅ Recusada pela rede de segurança (exclusion constraint) |
+| 5b | Marcação sobreposta **intencional** | ✅ Aceite |
+| 6 | Falta antes da hora | ✅ Recusada |
+| 7 | Cancelar → histórico de estado | ✅ |
+| 8 | Alterar uma cancelada | ✅ Recusado |
+| 9 | Marcar o cancelamento como tardio | ✅ Aceite (exceção prevista na 1.6) |
+| 10 | Editar o histórico | ✅ Recusado |
+| 11 | Apagar um serviço já usado | ✅ Recusado (FK) |
+
+**Pormenor a melhorar na 5.7:** a mensagem de erro diz o estado em inglês ("Uma marcação **cancelled** já não pode ser alterada"). O painel vai mostrar mensagens em português, mas convém traduzir também na base de dados quando se escreverem as funções da agenda.
+
+---
+
+## 5.2 — Autenticação (mudar palavra-passe) ✅
+
+O login, a sessão persistente, "Sem acesso" e terminar sessão já existiam (4.6, testados na 4.9). Faltava a regra 5 da 2.14.
+
+| Ficheiro | O quê |
+|---|---|
+| `src/admin/pages/Configuracoes.jsx` | Página Configurações (sai das provisórias). Nesta fase só a secção **Conta**; o resto chega na 5.5 |
+| `src/admin/pages/configuracoes/SeccaoConta.jsx` | Mostra o email da sessão · formulário **Mudar palavra-passe** (nova + repetir) |
+
+**Comportamento:**
+- Validação no ecrã: mínimo **8 caracteres** e as duas **iguais**.
+- Grava com `supabase.auth.updateUser({ password })`. Não precisa de email porque o "Secure password change" está desligado (4.5).
+- Mensagens em português: igual à atual, demasiado fraca, sessão expirada, erro genérico. Sucesso: "Palavra-passe alterada. Use a nova na próxima vez que entrar."
+- A sessão continua ativa depois de mudar.
+
+**Verificado (2026-11-12):** lint e build OK · ecrã no estilo do design · validação "As duas palavras-passe não são iguais." a funcionar.
+
+**Teste do Gabriel (T-5.2):** entrar no painel → Configurações → mudar a palavra-passe → terminar sessão → entrar com a **nova**. A antiga deixa de funcionar.
+
+**Teste real do Gabriel (2026-11-12): ✅ funciona** (mudar → terminar sessão → entrar com a nova).
+
+---
+
+## 5.3 — Serviços e preços 🔶 *(falta o teu teste com dados reais)*
+
+Segue a Especificação 2.11. Escrita direta na tabela `services` (permitida ao administrador pelo RLS da 5.1).
+
+| Ficheiro | O quê |
+|---|---|
+| `src/lib/dinheiro.js` | Euros ↔ cêntimos: `formatarEuros` ("20 €", "17,50 €"), `lerEuros` (aceita "17", "17,5", "17.50 €"), `eurosParaCampo` |
+| `src/admin/pages/Servicos.jsx` | Página (sai das provisórias) |
+| `src/admin/pages/servicos/ServicoForm.jsx` | Formulário de criar/editar (cartão dourado) |
+
+**O que o barbeiro pode fazer:**
+| Ação | Comportamento |
+|---|---|
+| **+ Novo serviço** | Nome, descrição opcional, duração (5–480 min), preço habitual, preço visitante (**vazio = igual ao habitual**). Entra no fim da lista |
+| **Editar** | Mesmos campos, pré-preenchidos. Aviso: "Mudar preços ou duração só vale para marcações novas" |
+| **↑ ↓** | Muda a ordem dos serviços ativos (a ordem da página pública) |
+| **Desativar / Reativar** | Inativos ficam no fim, esbatidos, com "Inativo" |
+| **Apagar** | Pede confirmação. Se o serviço já foi usado: "já foi usado em marcações, por isso não pode ser apagado. Desative-o." (proteção da FK, 3.3) |
+
+**Verificado (2026-11-12):**
+- Conversões de euros testadas: 2000 → "20 €", 1750 → "17,50 €", "17,5" → 1750, "abc"/"-3"/"1,234" → recusados ✅
+- Lint e build OK ✅
+- Ecrã e formulário no estilo do design ✅
+- Em `?preview` (sem sessão) a lista **não carrega**, porque o RLS bloqueia quem não é administrador. É o comportamento certo ✅
+
+**Teste do Gabriel (T-5.3)**, com sessão iniciada:
+1. Ver os 5 serviços com os preços certos.
+2. Criar um serviço de teste (ex.: "Teste", 20 min, 5 €, visitante vazio) → aparece com 5 € / 5 €.
+3. Editar o preço de visitante para 6,50 → mostra "6,50 €".
+4. Subir/descer um serviço → a ordem muda.
+5. Desativar o serviço de teste → vai para o fim, "Inativo".
+6. Apagar o serviço de teste → desaparece.

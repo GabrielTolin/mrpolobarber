@@ -30,29 +30,11 @@ export function Notificacoes() {
   )
 }
 
-export function Servicos() {
-  return (
-    <>
-      <CabecalhoPagina titulo="Serviços e preços" />
-      <EmConstrucao descricao="Serviços, durações e preços (2.11)." />
-    </>
-  )
-}
-
 export function Horarios() {
   return (
     <>
       <CabecalhoPagina titulo="Horários e bloqueios" />
       <EmConstrucao descricao="Horário semanal, folgas, férias e feriados (2.12)." />
-    </>
-  )
-}
-
-export function Configuracoes() {
-  return (
-    <>
-      <CabecalhoPagina titulo="Configurações" />
-      <EmConstrucao descricao="Dados da barbearia e regras de marcação (2.13)." />
     </>
   )
 }
