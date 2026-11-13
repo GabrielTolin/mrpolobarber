@@ -83,3 +83,44 @@ Componente `src/public/ui/Entrada.jsx` (pré-visualização: `/design?ecra=0`). 
 **Por preencher antes do lançamento:** a **foto principal** (o Gabriel vai arranjá-la) e a morada e o WhatsApp (P-02). Os textos do título e da frase podem ser afinados.
 
 **Rotas previstas:** `/` = página de entrada · `/marcar` = fluxo (passos 1–5 + confirmação) · `/m/:código` = link pessoal.
+
+---
+
+## 6.1 — Funções públicas (backend) 🔶 *(aplicada e testada em 2026-11-13; à espera da tua validação)*
+
+Migration `20261113150000_public_booking.sql` (SQL mostrado e aprovado pelo Gabriel antes de aplicar).
+
+### Funções públicas (`anon` e `authenticated`)
+| Função | Devolve | Limite de pedidos |
+|---|---|---|
+| `public_info()` | Nome, dono, morada, mapa, WhatsApp, privacidade, regras visíveis (dias à frente, prazo de cancelamento, limite por telemóvel) e horário semanal com pausas | 120/min por IP (todas as leituras juntas) |
+| `public_services()` | Serviços ativos: id, nome, descrição, duração · **sem preços** | idem |
+| `available_days(serviço, de, até)` | Dias com vagas (máx. 63 dias por pedido) | idem |
+| `available_times(serviço, dia)` | Horas livres (`start_at` + `time_local`) | idem |
+| `quote_price(serviço, telemóvel)` | `{ok, price_cents}` · habitual só se o barbeiro o marcou | 30/h por IP |
+| `create_booking(serviço, início, nome, telemóvel, observações, chave, armadilha)` | Resumo + **código do link (uma vez)** | 5/h por IP e 3/h por telemóvel |
+| `get_booking(código)` | Resumo com estado efetivo, `can_cancel`, `cancel_until` | 30/h por IP (com `cancel_booking`) |
+| `cancel_booking(código)` | Resumo já cancelado | idem |
+
+**Códigos de erro** (`{ok: false, error}`): `INVALID_REQUEST` · `REJECTED` (armadilha) · `RATE_LIMITED` · `INVALID_PHONE` · `INVALID_NAME` · `INVALID_NOTES` · `SERVICE_UNAVAILABLE` · `TOO_LATE` · `SLOT_TAKEN` · `PHONE_BLOCKED` · `LIMIT_REACHED` (+ `limit`) · `NOT_FOUND` · `ALREADY_CANCELLED` · `TOO_LATE_TO_CANCEL`. As leituras, ao passar o limite, dão erro `RATE_LIMITED`.
+
+### Decisões aprovadas (diferenças em relação à Arquitetura)
+1. **`available_slots` continua só do painel** (tem `p_exclude`); o público usa **`available_times`**, com o mesmo cálculo e limite de pedidos.
+2. **Código do link** = HMAC-SHA256 da chave do pedido com um **segredo interno** (`app_secrets`, ilegível para todos), em base64 para URL (43 caracteres). Continua imprevisível e guardado **só em hash**, e um pedido repetido recebe **o mesmo link**.
+3. **Notificação ao barbeiro** fica para a etapa das notificações.
+
+Outros pormenores: telemóvel normalizado como no site (`normalize_phone` = `normalizarTelefone`) · nome 2–80 caracteres, observações até 200 · IP e telemóvel nos limites **só em hash com o segredo** · tarefa `purge_rate_limits` (cron, de hora a hora, ao minuto 17) apaga registos com mais de 24 h.
+
+### Testes (2026-11-13)
+**Regras** (bloco desfeito no fim, 15 grupos): todos ✅. Leitura sem preços · preço visitante/habitual · criar (hash, ator "cliente", visitante novo) · repetido = mesmo código · ocupado, cedo demais, fora da grelha · bloqueado · limite de 2 (ficha intacta, RN-11) · armadilha · ver/código falso/alterado · cancelar fora/dentro do prazo, repetido, vaga liberta · limites 5/h IP, 3/h telemóvel, 30/h preço · IP não fica em claro · `anon` sem acesso a tabelas, segredo e funções internas.
+
+**Concorrência** (pedidos reais em simultâneo, 07/12):
+| Cenário | Resultado |
+|---|---|
+| **20 pedidos para o mesmo horário** | ✅ **1 marcação**, 19 × `SLOT_TAKEN` |
+| 2 pedidos com a mesma chave | ✅ 1 marcação, **mesmo código** nos dois |
+| 3 pedidos do mesmo telemóvel (limite 2) | ✅ 2 marcações + `LIMIT_REACHED` |
+
+Dados do teste **apagados** com o OK do Gabriel (4 marcações, 3 clientes, contadores). Proteções contra apagar religadas e confirmadas.
+
+**Pela API do site** (chave publicável): `public_services` responde sem preços · `select` direto a `appointments` → 401 · `available_slots` → recusada · `get_booking` com código inventado → `NOT_FOUND`.
