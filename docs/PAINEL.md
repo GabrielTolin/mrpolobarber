@@ -1,6 +1,6 @@
 # MR Polo Barber — Painel do barbeiro
 
-**Etapa 5 — Desenvolvimento do painel administrativo** · Em curso desde 2026-11-12
+**Etapa 5 — Desenvolvimento do painel administrativo** · **Validada** a 2026-11-13
 
 Construir o PWA do barbeiro: autenticação, dashboard, agenda, clientes, serviços, horários e configurações. Segue a [Especificação](ESPECIFICACAO.md) e a [Arquitetura](ARQUITETURA.md).
 
@@ -20,8 +20,8 @@ Construir o PWA do barbeiro: autenticação, dashboard, agenda, clientes, servi�
 | 5.7 | Motor da agenda (backend) | ✅ Validado |
 | 5.8 | Agenda | ✅ Testado pelo Gabriel e validado |
 | 5.9 | Estados automáticos | ✅ Aplicada, testada e a correr |
-| 5.10 | Dashboard (Início com dados reais) | 🔶 Feito · falta o teu teste |
-| 5.11 | Testes e validação | ⏳ |
+| 5.10 | Dashboard (Início com dados reais) | ✅ Testado pelo Gabriel e validado |
+| 5.11 | Testes e validação | ✅ Validado |
 
 ---
 
@@ -456,7 +456,7 @@ O painel já mostra o estado certo pela hora (5.6/5.8); com o cron, o estado fic
 
 ---
 
-## 5.10 — Dashboard (Início com dados reais) 🔶 *(falta o teu teste)*
+## 5.10 — Dashboard (Início com dados reais) ✅
 
 **Motivo do card vazio reportado pelo Gabriel:** até aqui o Início era só a **estrutura** do design, com estados vazios fixos (5.0). Os dados reais eram precisamente esta subetapa. A marcação de teste dele (hoje, 15:00, Gabriel Tolin, 17 €) estava gravada corretamente.
 
@@ -480,3 +480,84 @@ Atualiza sozinho a cada minuto. **Ficheiros:** `src/admin/pages/Inicio.jsx` (ree
 3. Tocar na linha → abre o detalhe na Agenda. **Ver ficha** e **Enviar lembrete** funcionam.
 4. Às 15:00 a marcação passa a **Em curso** (cartão próprio); às **15:10** aparece **"Registar falta"**.
 5. **Listas:** o menu de serviços da nova marcação mostra os serviços (fundo preto, letras brancas).
+
+**Teste T-5.10 do Gabriel (2026-11-13): ✅ tudo OK** (Início com a marcação real e listas legíveis).
+
+---
+
+## 5.11 — Testes e validação ✅
+
+### 1. Verificação de segurança geral (2026-11-13) ✅
+
+| Verificação | Resultado |
+|---|---|
+| Funções (26) | **Nenhuma** executável pelo público · 9 pelo painel (`is_admin`, `available_slots`, 7 `admin_*`), todas `security definer` com verificação de administrador · as restantes só internas · **todas com `search_path` fixo** |
+| Tabelas (15) | **15/15 bloqueadas** ao visitante sem sessão (401) |
+| Registo público | Desligado |
+| `db:lint` / `lint` | Sem erros / sem avisos |
+| Dependências de produção | 0 vulnerabilidades |
+
+### 2. Critérios de aceitação do painel (Especificação)
+
+| Secção | Como ficou coberta |
+|---|---|
+| 2.2 Painel (acesso, áreas, marcação manual, estados) | Testes do Gabriel 4.9, 5.8, 5.10 · teste SQL do motor (5.7) |
+| 2.3 Estados | Testes SQL 5.1, 5.7, 5.9 · `Registar falta` no Início (5.10) |
+| 2.4 Cálculo de horários | Teste SQL 5.7 (dia vazio, almoço, encaixe, libertar) · **teste 5.11 (abaixo)** para domingo, feriados, dias especiais, horário semanal, pausas e limite de dias |
+| 2.5 Concorrência | Fila da agenda + restrição parcial (testes 5.1, 5.4, 5.7). A concorrência das **marcações online** testa-se na área pública |
+| 2.6 Alterações e cancelamentos (lado do barbeiro) | Teste SQL 5.7 · teste do Gabriel 5.8 |
+| 2.7 Preços (manual) | Teste SQL 5.7 (visitante 17 €) · teste do Gabriel 5.8 |
+| 2.8 Dashboard e navegação | Testes do Gabriel 5.0, 5.10 |
+| 2.10 Clientes (lado do barbeiro) | Teste do Gabriel 5.6 |
+| 2.11 Serviços | Teste do Gabriel 5.3 |
+| 2.12 Horários | Testes 5.4 (SQL + Gabriel) · teste 5.11 |
+| 2.13 Configurações | Teste do Gabriel 5.5 |
+| 2.14 Segurança | Secção 1 acima · testes 4.9 |
+
+**Ficam para outras etapas** (não são do painel): página pública, link pessoal e cancelamento pelo cliente, concorrência das reservas online, notificações e push, badge do ícone.
+
+### 3. O que falta para fechar a Etapa 5
+| # | Teste | Quem |
+|---|---|---|
+| 5.11-a | **Teste SQL dos horários** (`teste_horarios_511.sql`, desfeito no fim): domingo fechado · feriado sem horários e volta a abrir se desligado · dia especial fechado · dia especial 10–12 (substitui o semanal e as pausas) · mudar a abertura de segunda · pausa nova · nada a mais de 30 dias | Claude, com OK |
+| 5.11-b | **Security Advisor** no painel da Supabase (Advisors → Security Advisor) → enviar o que aparecer | Gabriel |
+| 5.11-c | **Volta completa no iPhone**, no PWA instalado: Início → Agenda (dia e semana, nova marcação, detalhe) → Clientes (lista e ficha) → Serviços → Horários → Configurações. Ver se tudo cabe no ecrã e se a barra inferior e o "Mais" funcionam | Gabriel |
+
+### Teste 5.11-a: horários (2026-11-13) ✅
+
+Transação desfeita no fim (confirmado depois: segunda continua a abrir às 09:00, 5 pausas, 0 dias especiais, feriado de 1/12 ativo). Dias usados: segunda 16/11, domingo 15/11, feriado 01/12.
+
+| # | Teste | Resultado |
+|---|---|---|
+| 1 | Domingo | ✅ 0 horários |
+| 2a | Feriado (1 de dezembro) | ✅ 0 horários |
+| 2b | Feriado desligado | ✅ Volta a abrir (34 horários) |
+| 3 | Dia especial fechado | ✅ 0 horários |
+| 4 | Dia especial 10:00–12:00 | ✅ 10:00 … 11:30 (substitui o semanal e as pausas) |
+| 5 | Segunda passa a abrir às 10:00 | ✅ 1.º horário 10:00 |
+| 6 | Pausa nova 16:00–16:30 | ✅ 15:30 sim, 15:45 não, 16:30 sim |
+| 7 | A mais de 30 dias | ✅ 0 horários |
+
+**5.11-b Security Advisor e 5.11-c volta completa no iPhone (Gabriel, 2026-11-13): ✅ tudo OK.**
+
+---
+
+### Ajuste final (2026-11-13): logótipo no telemóvel
+
+No telemóvel não há menu lateral, por isso o logótipo não aparecia. A pedido do Gabriel, nos ecrãs < 1024 px o **logótipo fica como fundo**, centrado, a **8 % de opacidade**, fixo e sem interferir com toques (ficheiro AdminLayout.jsx). Verificado a 375 px: logótipo centrado (292 px de largura) e barra inferior no sítio.
+
+---
+
+## Validação da Etapa 5
+
+- [x] Todas as subetapas 5.0–5.11 testadas e validadas pelo Gabriel (2026-11-13)
+- [x] Etapa 5 fechada → próxima etapa
+
+**Passa para a frente:**
+| Item | Quando |
+|---|---|
+| Dados de teste (cliente "Gabriel Tolin" e a marcação de 13/11) | Limpar antes do lançamento |
+| Trocar o administrador de teste pela conta do barbeiro (G-3) | Antes do lançamento |
+| Página pública, link pessoal, reservas online, funções públicas e limites de pedidos | Etapa da área pública |
+| Notificações (página, push, Edge Function, resumo do dia, badge) | Etapa das notificações |
+| P-02 (morada/WhatsApp, se ainda não preenchidos), P-03, P-04 (RGPD e privacidade) | Antes do lançamento |

@@ -43,8 +43,13 @@ export default function AdminLayout() {
         </button>
       </aside>
 
+      {/* Telemóvel e tablet: sem menu lateral, o logótipo fica como fundo discreto */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center lg:hidden">
+        <img src="/brand-logo.webp" alt="" className="w-[78vw] max-w-[380px] opacity-[0.08]" />
+      </div>
+
       {/* Conteúdo (com espaço para a barra inferior no telemóvel) */}
-      <main className="min-w-0 flex-1 px-4 pt-6 pb-24 sm:px-8 lg:px-12 lg:py-10">
+      <main className="relative z-10 min-w-0 flex-1 px-4 pt-6 pb-24 sm:px-8 lg:px-12 lg:py-10">
         <Outlet />
       </main>
 
