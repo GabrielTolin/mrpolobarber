@@ -19,7 +19,7 @@ Construir o PWA do barbeiro: autenticação, dashboard, agenda, clientes, servi�
 | 5.6 | Clientes | ✅ Testado pelo Gabriel e validado |
 | 5.7 | Motor da agenda (backend) | ✅ Validado |
 | 5.8 | Agenda | ✅ Testado pelo Gabriel e validado |
-| 5.9 | Estados automáticos | 🔶 Migration escrita, por aplicar |
+| 5.9 | Estados automáticos | ✅ Aplicada, testada e a correr · à espera da tua validação |
 | 5.10 | Dashboard (Início com dados reais) | ⏳ |
 | 5.11 | Testes e validação | ⏳ |
 
@@ -407,7 +407,7 @@ Hora grande, estado (com detalhe do cancelamento), cliente (**Ver ficha**), tele
 
 ---
 
-## 5.9 — Estados automáticos 🔶 *(migration escrita, por aplicar)*
+## 5.9 — Estados automáticos ✅
 
 Migration `20261113083906_auto_statuses` (Arquitetura 3.8 §1 e §5):
 
@@ -423,3 +423,23 @@ O painel já mostra o estado certo pela hora (5.6/5.8); com o cron, o estado fic
 **Teste preparado** (`teste_estados_59.sql`, transação desfeita): uma marcação que já terminou → concluída · uma a decorrer → em curso · uma futura fica confirmada · uma cancelada não muda · histórico com ator "sistema" · 2.ª execução não repete nada.
 
 **Se a extensão precisar de ser ativada no painel** (tarefa G-2 da 3.11): Database → Extensions → `pg_cron` → Enable.
+
+### Aplicada, testada e a correr (2026-11-13) ✅
+
+| Verificação | Resultado |
+|---|---|
+| Extensão | `pg_cron` **1.6.4** ativa (a migration conseguiu ativá-la; não foi preciso o painel) |
+| Tarefas | `advance_statuses` `* * * * *` (ativa) · `ensure_holidays` `0 3 1 12 *` (ativa) |
+| Permissões | `advance_statuses()` não executável por `anon` nem `authenticated` |
+| **Execução real** | 1.ª execução às **08:42:00** (Lisboa): `succeeded` |
+
+**Teste** (`teste_estados_59.sql`, transação desfeita):
+
+| # | Teste | Resultado |
+|---|---|---|
+| 1 | Marcação que já terminou (ainda "confirmada") | ✅ → concluída |
+| 2 | Marcação a decorrer | ✅ → em curso |
+| 3 | Marcação futura | ✅ continua confirmada |
+| 4 | Marcação cancelada | ✅ não muda |
+| 5 | Histórico | ✅ ator "sistema" |
+| 6 | 2.ª execução | ✅ não repete eventos |
