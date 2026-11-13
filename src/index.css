@@ -134,6 +134,16 @@ body {
   .field:focus {
     border-color: var(--color-gold-2);
   }
+  /* Listas (select): a lista que abre é desenhada pelo sistema operativo. Com
+     fundo transparente e texto claro, no Windows as opções ficavam brancas sobre
+     branco (pareciam vazias). Fundo e texto explícitos resolvem. */
+  select.field {
+    background-color: var(--color-bg);
+  }
+  select.field option {
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+  }
 
   /* Divisória "poste de barbeiro" — usar com moderação (só no Início) */
   .pole {

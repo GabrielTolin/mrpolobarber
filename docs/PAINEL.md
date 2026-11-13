@@ -443,3 +443,11 @@ O painel já mostra o estado certo pela hora (5.6/5.8); com o cron, o estado fic
 | 4 | Marcação cancelada | ✅ não muda |
 | 5 | Histórico | ✅ ator "sistema" |
 | 6 | 2.ª execução | ✅ não repete eventos |
+
+### Correção (2026-11-13): listas (select) com opções invisíveis
+
+**Problema reportado pelo Gabriel:** na nova marcação manual, o menu de serviços aparecia **vazio**.
+
+**Diagnóstico:** os dados estavam certos (5 serviços ativos na base de dados). A causa é visual: os `select` tinham **fundo transparente e texto claro**; a lista que abre é desenhada pelo sistema operativo e, no Windows, fica com fundo **branco**, por isso as opções ficavam **brancas sobre branco**.
+
+**Correção:** `select.field` e as suas `option` passam a ter fundo `bg` (#0D0C0A) e texto `fg` (#EDE6D6) em `src/index.css`. Afeta os 3 `select` do painel (serviço e origem na marcação; tipo de dia especial). Verificado no browser: fundo rgb(13,12,10), texto rgb(237,230,214).
