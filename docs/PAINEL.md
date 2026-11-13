@@ -17,9 +17,9 @@ Construir o PWA do barbeiro: autenticação, dashboard, agenda, clientes, servi�
 | 5.4 | Horários e bloqueios | ✅ Testado pelo Gabriel e validado |
 | 5.5 | Configurações | ✅ Testado pelo Gabriel e validado |
 | 5.6 | Clientes | ✅ Testado pelo Gabriel e validado |
-| 5.7 | Motor da agenda (backend) | ✅ Aplicada e testada (13/13) · à espera da tua validação |
-| 5.8 | Agenda | ⏳ |
-| 5.9 | Estados automáticos | ⏳ |
+| 5.7 | Motor da agenda (backend) | ✅ Validado |
+| 5.8 | Agenda | ✅ Testado pelo Gabriel e validado |
+| 5.9 | Estados automáticos | 🔶 Migration escrita, por aplicar |
 | 5.10 | Dashboard (Início com dados reais) | ⏳ |
 | 5.11 | Testes e validação | ⏳ |
 
@@ -349,3 +349,77 @@ Tudo passa pela **fila da agenda** e verifica `is_admin()`. Executáveis por `au
 | 10 | Falta numa marcação futura | ✅ Recusada |
 | 11 | Nota interna | ✅ No histórico, ator barbeiro |
 | 12 | Horário libertado depois de cancelar | ✅ 09:25 (encaixe), 09:30, 09:45 |
+
+---
+
+## 5.8 — Agenda ✅
+
+Segue a Especificação 2.2, 2.3 e 2.6, sobre o motor da 5.7. Sem migrations novas.
+
+### Página `/admin/agenda`
+- Estado na URL: `?data=AAAA-MM-DD&vista=dia|semana` (e `?nova=1` abre logo uma nova marcação; o botão "+ Nova marcação" do Início usa-o).
+- Navegação: ‹ **Hoje** › · escolher data · **Dia / Semana**. Recarrega a cada minuto.
+- **Vista diária:** marcações, bloqueios e **espaços livres** por ordem de hora. Cada marcação: hora, ponto de estado, cliente, serviço · duração, preço, estado (efetivo pela hora). "Em curso" com fundo dourado; concluídas/canceladas/faltas esbatidas; **sobreposições** com contorno. Dias fechados, feriados e dias especiais mostram a nota. **Tocar num espaço livre** abre a nova marcação com o dia e a hora preenchidos.
+- **Vista semanal:** 7 cartões (seg–dom) com o nº de marcações, as primeiras horas/nomes, bloqueios e dias fechados; hoje destacado. Tocar num dia abre a vista diária.
+
+### Nova marcação / editar (`MarcacaoForm`)
+1. **Cliente:** pesquisar (nome/telemóvel) ou **criar na hora** (só o nome é obrigatório; aviso de telemóvel repetido).
+2. **Serviço** (ativos; ao editar mantém o atual mesmo desativado).
+3. **Dia e hora** livres, com **sugestões dos horários livres** (`available_slots`) em botões.
+4. **Preço** sugerido pela categoria do cliente (habitual/visitante), editável; mostra a tabela.
+5. **Origem:** WhatsApp / Telefone / Presencial (online fica bloqueada).
+6. Observações.
+7. **Avisos** antes de gravar: "Fora do horário de funcionamento" e "Conflito com: …" → **Guardar mesmo assim** / Voltar.
+8. Depois de mudar a hora de uma marcação: **"Avisar o cliente?"** com a mensagem de WhatsApp pré-escrita (2.6).
+
+Em curso: só serviço, preço e observações (dia, hora e origem bloqueados).
+
+### Detalhe da marcação (`DetalheMarcacao`)
+Hora grande, estado (com detalhe do cancelamento), cliente (**Ver ficha**), telemóvel, categoria, serviço, preço, origem, observações. Ações por estado (2.6 opção A):
+| Estado | Ações |
+|---|---|
+| Confirmada | Editar · **Enviar lembrete** (WhatsApp) · Cancelar (normal ou **tardio**) |
+| Em curso | Editar (serviço/preço/obs) · **Registar falta** (a partir do início + tolerância) · Cancelar |
+| Cancelada | Marcar / desmarcar como tardio · avisar o cliente por WhatsApp (se cancelada pelo barbeiro) |
+| Todas | **Nota interna** · **Histórico** (quem, quando, antigo → novo) |
+
+### Ficheiros
+`src/admin/pages/Agenda.jsx` · `src/admin/pages/agenda/` (`agendaApi`, `VistaDia`, `VistaSemana`, `MarcacaoForm`, `DetalheMarcacao`, `EscolherCliente`) · `src/components/Modal.jsx` (folha em baixo no telemóvel, centrada no computador) · `src/hooks/useAgora.js` · `src/lib/datas.js` (+ `instanteLisboa`, `paraMinutos`, `deMinutos`).
+
+### Verificado (2026-11-12)
+- `instanteLisboa`: 13/11 09:00 → 09:00Z (inverno) · 14/07 09:00 → 08:00Z (verão) · 29/03 03:00 (dia da mudança) → 02:00Z ✅
+- Lint **sem avisos** (o relógio passa a vir de `useAgora`, sem `Date` durante a renderização) · build OK ✅
+- A página abre e a "Nova marcação" abre a janela de escolher cliente, sem erros de código ✅
+
+### Teste do Gabriel (T-5.8), com sessão
+1. **Agenda → hoje/amanhã:** aparecem os **espaços livres** respeitando o almoço. Tocar num → nova marcação com a hora preenchida.
+2. Criar uma marcação para amanhã às 10:00 (cliente novo "Teste Agenda", Corte com máquina) → preço sugerido **17 €** → aparece na agenda.
+3. Criar outra às **10:15** → aviso **"Conflito com: …"** → Guardar mesmo assim → aparece com contorno de sobreposição.
+4. Criar uma às **13:15** → aviso **"Fora do horário"**.
+5. Abrir a das 10:00 → **Editar** → mudar para 11:00 → aparece **"Avisar o cliente?"** com a mensagem.
+6. Abrir → **Nota interna** → aparece no histórico. **Enviar lembrete** abre o WhatsApp.
+7. **Cancelar** uma; **Cancelar como tardio** outra → estados certos; "Marcar como tardio" alterna.
+8. **Vista semanal** mostra as marcações; tocar no dia volta à diária.
+9. **Horários e bloqueios:** criar um **bloqueio** por cima da marcação que sobrou → aparece o **aviso de marcações afetadas** (o teste pendente da 5.4) → Voltar.
+10. No fim: cancelar as marcações de teste. (Marcações e o cliente com marcações **não se apagam** — ficam no histórico; o cliente "Teste Agenda" pode ficar, ou limpo a base de dados no fim da Etapa 5.)
+
+**Teste T-5.8 do Gabriel (2026-11-13): ✅ tudo OK** (incluindo o aviso de marcações afetadas que estava pendente da 5.4).
+
+---
+
+## 5.9 — Estados automáticos 🔶 *(migration escrita, por aplicar)*
+
+Migration `20261113083906_auto_statuses` (Arquitetura 3.8 §1 e §5):
+
+| Peça | O quê |
+|---|---|
+| Extensão **`pg_cron`** | Tarefas agendadas dentro do PostgreSQL (versão 1.6.4 disponível no projeto) |
+| **`advance_statuses()`** | `confirmed` → **`in_progress`** na hora de início · → **`completed`** na hora de fim (incluindo as que ficaram para trás). Histórico com ator **"Sistema"**. Ninguém a executa diretamente |
+| Tarefa **`advance_statuses`** | **A cada minuto** |
+| Tarefa **`ensure_holidays`** | **1 de dezembro**: garante os feriados dos 2 anos seguintes (não mexe nos que o barbeiro alterou) |
+
+O painel já mostra o estado certo pela hora (5.6/5.8); com o cron, o estado fica também **guardado** na base de dados (histórico, contagens de visitas, filtros).
+
+**Teste preparado** (`teste_estados_59.sql`, transação desfeita): uma marcação que já terminou → concluída · uma a decorrer → em curso · uma futura fica confirmada · uma cancelada não muda · histórico com ator "sistema" · 2.ª execução não repete nada.
+
+**Se a extensão precisar de ser ativada no painel** (tarefa G-2 da 3.11): Database → Extensions → `pg_cron` → Enable.

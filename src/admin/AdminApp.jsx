@@ -4,7 +4,6 @@ import RotaAdmin from './RotaAdmin'
 import Login from './Login'
 import NaoEncontrado from '../public/NaoEncontrado'
 import {
-  Agenda,
   Notificacoes,
 } from './pages/Paginas'
 import Inicio from './pages/Inicio'
@@ -13,6 +12,7 @@ import Servicos from './pages/Servicos'
 import Horarios from './pages/Horarios'
 import Clientes from './pages/Clientes'
 import ClienteFicha from './pages/ClienteFicha'
+import Agenda from './pages/Agenda'
 
 // Carregado à parte (React.lazy no App.jsx): quem só marca não descarrega o painel.
 export default function AdminApp() {

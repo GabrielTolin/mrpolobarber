@@ -79,6 +79,30 @@ export function formatarInstante(instante) {
   return `${formatarData(data, { ano: false })}, ${hora}`
 }
 
+// Instante (Date) correspondente a uma data e hora de Lisboa ('AAAA-MM-DD', 'HH:MM').
+// Trata a mudança de hora: ajusta pelo desvio real de Lisboa nesse momento.
+export function instanteLisboa(dataISO, hora = '00:00') {
+  const [a, m, d] = dataISO.split('-').map(Number)
+  const [h, min] = hora.split(':').map(Number)
+  const alvo = Date.UTC(a, m - 1, d, h, min)
+  let t = alvo
+  for (let i = 0; i < 2; i++) {
+    const p = partesLisboa(t)
+    const [pa, pm, pd] = p.data.split('-').map(Number)
+    const [ph, pmin] = p.hora.split(':').map(Number)
+    t += alvo - Date.UTC(pa, pm - 1, pd, ph, pmin)
+  }
+  return new Date(t)
+}
+
+// "HH:MM" ↔ minutos desde a meia-noite
+export const paraMinutos = (hhmm) => {
+  const [h, m] = hhmm.split(':').map(Number)
+  return h * 60 + m
+}
+export const deMinutos = (min) =>
+  `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`
+
 // "HH:MM:SS" ou "HH:MM" → "HH:MM"
 export function horaCurta(hora) {
   return hora ? hora.slice(0, 5) : ''

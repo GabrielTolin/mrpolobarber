@@ -17,7 +17,7 @@ export default function Inicio() {
         titulo={nome ? `${saudacao()}, ${nome}` : saudacao()}
         poste
       >
-        <Link to="/admin/agenda" className="btn-primary">
+        <Link to="/admin/agenda?nova=1" className="btn-primary">
           + Nova marcação
         </Link>
       </CabecalhoPagina>
