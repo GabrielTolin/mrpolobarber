@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import Carregando from './components/Carregando'
 import PublicLayout from './public/PublicLayout'
+import Inicio from './public/Inicio'
 import Marcar from './public/Marcar'
 import LinkPessoal from './public/LinkPessoal'
 import NaoEncontrado from './public/NaoEncontrado'
@@ -16,7 +17,8 @@ export default function App() {
     <Routes>
       {/* Zona pública + link pessoal */}
       <Route element={<PublicLayout />}>
-        <Route index element={<Marcar />} />
+        <Route index element={<Inicio />} />
+        <Route path="marcar" element={<Marcar />} />
         <Route path="m/:token" element={<LinkPessoal />} />
         {DesignPreview && (
           <Route path="design" element={<Suspense fallback={<Carregando />}><DesignPreview /></Suspense>} />

@@ -11,12 +11,12 @@ export default function Inicio() {
   const [info, setInfo] = useState(null)
 
   useEffect(() => {
-    let ativo = true
+    const vivo = { atual: true }
     obterInfo()
-      .then((dados) => ativo && setInfo(dados))
-      .catch(() => ativo && setInfo({}))
+      .then((dados) => vivo.atual && setInfo(dados))
+      .catch(() => vivo.atual && setInfo({}))
     return () => {
-      ativo = false
+      vivo.atual = false
     }
   }, [])
 

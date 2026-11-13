@@ -86,7 +86,7 @@ Componente `src/public/ui/Entrada.jsx` (pré-visualização: `/design?ecra=0`). 
 
 ---
 
-## 6.1 — Funções públicas (backend) 🔶 *(aplicada e testada em 2026-11-13; à espera da tua validação)*
+## 6.1 — Funções públicas (backend) ✅ *(validada 2026-11-13)*
 
 Migration `20261113150000_public_booking.sql` (SQL mostrado e aprovado pelo Gabriel antes de aplicar).
 
@@ -124,3 +124,32 @@ Outros pormenores: telemóvel normalizado como no site (`normalize_phone` = `nor
 Dados do teste **apagados** com o OK do Gabriel (4 marcações, 3 clientes, contadores). Proteções contra apagar religadas e confirmadas.
 
 **Pela API do site** (chave publicável): `public_services` responde sem preços · `select` direto a `appointments` → 401 · `available_slots` → recusada · `get_booking` com código inventado → `NOT_FOUND`.
+
+**6.1 validada pelo Gabriel (2026-11-13).**
+
+---
+
+## 6.2 — Fluxo de marcação 🔶 *(implementado em 2026-11-13; à espera do teu teste)*
+
+**Rotas:** `/` = página de entrada (`src/public/Inicio.jsx`, dados reais de `public_info`) · `/marcar` = fluxo (`src/public/Marcar.jsx`). Acesso ao backend só pelas funções públicas, em `src/public/publicApi.js` (com as mensagens de cada código de erro).
+
+| Passo | O que faz |
+|---|---|
+| Entrada | Horário e destaques vindos dos **Horários do painel**; morada, mapa e WhatsApp das **Configurações** (aparecem quando estiverem preenchidos, P-02) · "Marcar horário" → `/marcar` |
+| 1 · Serviço | `public_services` (sem preços) |
+| 2 · Dia | Calendário com `available_days` mês a mês, até `max_days_ahead`; dias sem vagas apagados · mês sem vagas → aviso + "Falar com o barbeiro" |
+| 3 · Hora | `available_times`, Manhã/Tarde · dia que entretanto ficou cheio → aviso |
+| 4 · Dados | Nome, telemóvel (+351 ou com indicativo), observações (≤ 200), **campo armadilha** escondido, "Lembrar…" (a gravação no dispositivo é a 6.3), aviso de privacidade · validação no site e depois `quote_price` |
+| 5 · Revisão | Resumo com o **preço** pelo telemóvel · "Confirmar marcação" → `create_booking` com chave de idempotência (proteção extra contra duplo clique) |
+| Confirmada | O essencial: ✓, resumo, **link pessoal** com copiar, "Voltar ao início". O resto (`.ics`, WhatsApp, lembrar, próximas marcações) é a **6.3** |
+
+**Comportamento:**
+- O passo vai no endereço (`?passo=N`): o "voltar" do telemóvel volta um passo, sem perder os dados. Abrir um passo diretamente sem os anteriores → passo 1.
+- Horário ocupado entretanto (`SLOT_TAKEN`/`TOO_LATE`) → volta à **hora** com aviso, mantendo os dados (2.1, 2.5). Serviço desativado → volta ao serviço. Bloqueado / limite / demasiados pedidos → mensagem + "Falar com o barbeiro".
+- Depois de confirmada, o "voltar" não repete a marcação (e a chave de idempotência garante-o no servidor).
+
+**Verificado no browser (telemóvel):** entrada com horário real · serviço → dia (dias reais, hoje e sábado incluídos, domingo apagado) → horas (última da manhã 12:30 para 25 min) → dados (validação de campos vazios) → revisão com preço 9 € · voltar mantém os dados · `?passo=4` direto → passo 1 · consola sem erros · build de produção OK, sem a pré-visualização `/design`.
+
+**Não testado por mim:** carregar em **"Confirmar marcação"** (cria uma marcação real) → fica para o teste do Gabriel.
+
+**Nota:** o nome na secção "Onde estamos" vem de Configurações → Barbearia (hoje "MR Polo Barber").
