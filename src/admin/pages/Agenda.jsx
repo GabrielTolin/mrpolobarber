@@ -61,6 +61,16 @@ export default function Agenda() {
     }
   }, [periodo, detalhe])
 
+  // ?m=<id> (vindo do Início): abre logo o detalhe dessa marcação.
+  const marcacaoPedida = params.get('m')
+  useEffect(() => {
+    if (!marcacaoPedida || !periodo) return
+    const m = periodo.marcacoes.find((x) => x.id === marcacaoPedida)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (m) setDetalhe(m)
+    setParams({ data, vista }, { replace: true })
+  }, [marcacaoPedida, periodo, data, vista, setParams])
+
   function ir(novaData, novaVista = vista) {
     setParams({ data: novaData, vista: novaVista }, { replace: true })
   }

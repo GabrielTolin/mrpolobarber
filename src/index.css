@@ -138,11 +138,14 @@ body {
      fundo transparente e texto claro, no Windows as opções ficavam brancas sobre
      branco (pareciam vazias). Fundo e texto explícitos resolvem. */
   select.field {
-    background-color: var(--color-bg);
+    background-color: #000000;
+    color: #ffffff;
+    color-scheme: dark;
   }
-  select.field option {
-    background-color: var(--color-bg);
-    color: var(--color-fg);
+  select.field option,
+  select.field optgroup {
+    background-color: #000000 !important;
+    color: #ffffff !important;
   }
 
   /* Divisória "poste de barbeiro" — usar com moderação (só no Início) */

@@ -19,8 +19,8 @@ Construir o PWA do barbeiro: autenticação, dashboard, agenda, clientes, servi�
 | 5.6 | Clientes | ✅ Testado pelo Gabriel e validado |
 | 5.7 | Motor da agenda (backend) | ✅ Validado |
 | 5.8 | Agenda | ✅ Testado pelo Gabriel e validado |
-| 5.9 | Estados automáticos | ✅ Aplicada, testada e a correr · à espera da tua validação |
-| 5.10 | Dashboard (Início com dados reais) | ⏳ |
+| 5.9 | Estados automáticos | ✅ Aplicada, testada e a correr |
+| 5.10 | Dashboard (Início com dados reais) | 🔶 Feito · falta o teu teste |
 | 5.11 | Testes e validação | ⏳ |
 
 ---
@@ -451,3 +451,32 @@ O painel já mostra o estado certo pela hora (5.6/5.8); com o cron, o estado fic
 **Diagnóstico:** os dados estavam certos (5 serviços ativos na base de dados). A causa é visual: os `select` tinham **fundo transparente e texto claro**; a lista que abre é desenhada pelo sistema operativo e, no Windows, fica com fundo **branco**, por isso as opções ficavam **brancas sobre branco**.
 
 **Correção:** `select.field` e as suas `option` passam a ter fundo `bg` (#0D0C0A) e texto `fg` (#EDE6D6) em `src/index.css`. Afeta os 3 `select` do painel (serviço e origem na marcação; tipo de dia especial). Verificado no browser: fundo rgb(13,12,10), texto rgb(237,230,214).
+
+**Ajuste pedido pelo Gabriel (2026-11-13):** as listas continuavam ilegíveis → `select.field` passa a **fundo preto (#000) e letras brancas (#fff)**, com `color-scheme: dark`, e as `option` com fundo preto e texto branco forçados (`!important`).
+
+---
+
+## 5.10 — Dashboard (Início com dados reais) 🔶 *(falta o teu teste)*
+
+**Motivo do card vazio reportado pelo Gabriel:** até aqui o Início era só a **estrutura** do design, com estados vazios fixos (5.0). Os dados reais eram precisamente esta subetapa. A marcação de teste dele (hoje, 15:00, Gabriel Tolin, 17 €) estava gravada corretamente.
+
+Segue a Especificação 2.8 e o handoff do design, com o conteúdo validado:
+
+| Bloco | Conteúdo |
+|---|---|
+| Cabeçalho | Data · "Bom dia/Boa tarde/Boa noite, Matheus" · **contadores**: marcações (sem as canceladas) · concluídas · **por atender** (substitui o "por confirmar" do design) · "+ Nova marcação" · poste |
+| **Marcações do dia** | Linhas do design: hora, ponto e estado (pela hora), cliente (**⚠️** se tiver faltas a partir do limite), serviço · duração, preço. Tocar → abre o **detalhe na Agenda** (`/admin/agenda?m=<id>`) |
+| **Em curso** *(só quando há)* | Cartão dourado com o cliente e **"Registar falta" em destaque** a partir do início + tolerância (2.8 ➕, janela curta da 2.3); antes disso explica quando aparece |
+| **Próxima marcação** | Hora grande, "**em Xh Ymin**" (atualiza a cada minuto), cliente, serviço · duração · preço, "**N.ª visita · último corte há …**" (do histórico), **Ver ficha** e **Enviar lembrete** (WhatsApp com mensagem pré-escrita). Sem mais: "Sem mais marcações hoje" |
+| **Pendências** | **Notificações não lidas** (2.9), com o nº e link "por ler". Ficam vazias até a etapa das notificações as começar a criar |
+
+Atualiza sozinho a cada minuto. **Ficheiros:** `src/admin/pages/Inicio.jsx` (reescrito) · `src/admin/pages/inicio/useDashboard.js` · `Agenda.jsx` (abre o detalhe com `?m=`).
+
+**Verificado (2026-11-13):** lint sem avisos · build OK · a marcação de teste existe para hoje às 15:00 e entra como "Próxima marcação".
+
+**Teste do Gabriel (T-5.10):**
+1. Início mostra a marcação das 15:00 em **Marcações do dia** e em **Próxima marcação** ("em …", 1.ª visita).
+2. Contadores: 1 marcação · 0 concluídas · 1 por atender.
+3. Tocar na linha → abre o detalhe na Agenda. **Ver ficha** e **Enviar lembrete** funcionam.
+4. Às 15:00 a marcação passa a **Em curso** (cartão próprio); às **15:10** aparece **"Registar falta"**.
+5. **Listas:** o menu de serviços da nova marcação mostra os serviços (fundo preto, letras brancas).
