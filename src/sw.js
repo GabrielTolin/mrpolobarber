@@ -32,12 +32,16 @@ self.addEventListener('push', (event) => {
     body: data.body || '',
     icon: '/pwa-192x192.png',
     badge: '/pwa-64x64.png',
-    data: { url: data.url || '/admin' },
+    data: { url: data.url || '/admin', id: data.tag },
     // Uma notificação por acontecimento (se o mesmo chegar duas vezes, substitui em vez de duplicar)
     tag: data.tag,
   }
 
-  const tarefas = [self.registration.showNotification(title, options)]
+  const tarefas = [
+    self.registration.showNotification(title, options),
+    // Se o painel estiver aberto, atualiza logo o contador de não lidas (7.4)
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((janelas) => janelas.forEach((j) => j.postMessage({ tipo: 'notificacao' }))),
+  ]
   if (typeof data.unread === 'number' && 'setAppBadge' in navigator) {
     tarefas.push(data.unread > 0 ? navigator.setAppBadge(data.unread) : navigator.clearAppBadge())
   }
@@ -46,7 +50,10 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  const url = new URL(event.notification.data?.url || '/admin', self.location.origin).href
+  const destino = new URL(event.notification.data?.url || '/admin', self.location.origin)
+  // ?n=<id>: o painel marca esta notificação como lida ao abrir (2.9: "automático ao abrir")
+  if (event.notification.data?.id) destino.searchParams.set('n', event.notification.data.id)
+  const url = destino.href
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((janelas) => {

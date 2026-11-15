@@ -10,6 +10,7 @@ import Carregando from '../../components/Carregando'
 import CabecalhoPagina from '../CabecalhoPagina'
 import { resumoDoCliente, useDashboard } from './inicio/useDashboard'
 import AvisoNotificacoes from './inicio/AvisoNotificacoes'
+import { destinoDe, marcarComoLidas, useNaoLidas } from '../naoLidas'
 
 const COR_PONTO = { confirmed: 'bg-ok', in_progress: 'bg-gold', completed: 'bg-muted-2', cancelled: 'bg-muted-2', no_show: 'bg-warn' }
 
@@ -37,6 +38,7 @@ export default function Inicio() {
   const { dados, erro, recarregar } = useDashboard()
   const [erroAcao, setErroAcao] = useState('')
   const nome = dados?.settings?.owner_name
+  const naoLidas = useNaoLidas()
 
   const marcacoes = dados?.marcacoes ?? []
   const comEstado = marcacoes.map((m) => ({ ...m, estado: estadoEfetivo(m, agora) }))
@@ -197,9 +199,9 @@ export default function Inicio() {
             <section className="card">
               <div className="mb-3 flex items-baseline justify-between">
                 <h2 className="card-title">Pendências</h2>
-                {dados.naoLidas > 0 && (
+                {(naoLidas ?? dados.naoLidas) > 0 && (
                   <Link to="/admin/notificacoes" className="text-[13px] text-gold-2 hover:underline">
-                    {dados.naoLidas} por ler →
+                    {naoLidas ?? dados.naoLidas} por ler →
                   </Link>
                 )}
               </div>
@@ -207,13 +209,23 @@ export default function Inicio() {
                 <p className="border-t border-line-soft pt-3 text-sm text-muted">Sem pendências.</p>
               ) : (
                 dados.notificacoes.map((n) => (
-                  <div key={n.id} className="flex items-start gap-3 border-t border-line-soft py-2.5">
+                  <button
+                    key={n.id}
+                    type="button"
+                    onClick={async () => {
+                      await marcarComoLidas([n.id])
+                      const destino = destinoDe(n)
+                      if (destino) navigate(destino)
+                      else recarregar()
+                    }}
+                    className="flex w-full items-start gap-3 border-t border-line-soft py-2.5 text-left hover:opacity-85"
+                  >
                     <i className="mt-[7px] h-1.5 w-1.5 shrink-0 rotate-45 bg-gold-2" />
                     <div className="min-w-0 flex-1">
                       <b className="block text-sm font-semibold">{n.title}</b>
                       <span className="text-[13px] text-muted">{n.body}</span>
                     </div>
-                  </div>
+                  </button>
                 ))
               )}
             </section>

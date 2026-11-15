@@ -112,7 +112,7 @@ O push no telemóvel só se vê depois da 7.3 (ativar o aparelho). Antes disso: 
 
 ---
 
-## 7.3 — Ativar no telemóvel 🔶 *(feita em 2026-11-15; falta aplicar 1 migration e o teu teste no iPhone)*
+## 7.3 — Ativar no telemóvel ✅ *(testada pelo Gabriel no iPhone, 2026-11-15)*
 
 | Peça | Ficheiro | O que faz |
 |---|---|---|
@@ -138,3 +138,22 @@ Texto das preferências atualizado ("Vale para todos os dispositivos com notific
 **1.º teste do Gabriel (2026-11-15): "não achei para mandar notificação de teste".** Diagnóstico: o código novo já estava publicado, mas **sem a chave pública** (`VITE_VAPID_PUBLIC_KEY` não estava na Vercel no momento do build) → o painel considerava as notificações "não suportadas" e não mostrava o botão Ativar (nem o de teste, que só aparece depois de ativar). Nenhum aparelho registado. A migration da notificação de teste também ainda não estava aplicada.
 - Correção: novo estado **"sem chave"** com a mensagem certa ("falta a chave pública na Vercel… é preciso publicar de novo"), em vez de "este navegador não permite".
 - Falta: Gabriel acrescenta a variável na Vercel e publica de novo; aplicar a migration (com OK).
+- **Migration `20261115180000_test_notification.sql` aplicada (2026-11-15, OK do Gabriel).** Tipos de notificação: `new_booking, client_cancelled, daily_summary, reminder, test`. `admin_send_test_notification()`: executável por `authenticated`, não por `anon`; teste (desfeito): utilizador que não é administrador → "Sem permissão"; administrador → cria "Notificação de teste".
+
+**2.º teste do Gabriel (2026-11-15): "Chegou".** Confirmado no servidor: 1 aparelho registado (serviço `web.push.apple.com`); 3 "Notificação de teste" enviadas, cada uma com resposta 200 da função (`aparelhos: 1, enviados: 1, falhas: []`) e `push_sent_at` gravado. **Primeiro push real no iPhone ✅** — a cadeia completa funciona: notificação → `pg_net` → `send-push` → Apple → iPhone.
+
+---
+
+## 7.4 — Página Notificações 🔶 *(feita em 2026-11-15; à espera do teu teste no iPhone)*
+
+| Peça | Ficheiro | O que faz |
+|---|---|---|
+| Contador único | `src/admin/naoLidas.js` | Nº de não lidas **partilhado** pela navegação, Início, página e **número no ícone** (`setAppBadge`/`clearAppBadge`). Atualiza ao abrir o painel, ao voltar à app, quando chega um push (aviso do service worker) e de minuto a minuto |
+| Página | `src/admin/pages/Notificacoes.jsx` (substitui o marcador provisório; `Paginas.jsx` apagado) | Lista dos últimos 30 dias por dia (Hoje, Ontem, datas), ícone por tipo, hora; **não lidas em destaque** (contorno dourado + ponto) · tocar → marca **só essa** como lida e abre a **marcação** na agenda (o resumo do dia abre a agenda de hoje; o teste não leva a lado nenhum) · **"Marcar todas como lidas"** · cabeçalho "N por ler" / "Tudo lido" |
+| Navegação | `AdminLayout.jsx` | Número dourado em "Notificações" (menu lateral e barra inferior) |
+| Início | `Inicio.jsx` | "N por ler" usa o mesmo contador; cada pendência é clicável (marca como lida e abre a marcação) |
+| Push → lida | `src/sw.js` + `AdminLayout.jsx` | Ao **tocar no push**, abre com `?n=<id>`; o painel marca essa notificação como lida e limpa o endereço (2.9: "automático ao abrir") — sem precisar de republicar a função |
+
+**Verificado (2026-11-15, browser em tamanho de telemóvel, notificações simuladas):** lista agrupada (Hoje/Ontem) com 3 por ler · número **3** na navegação · tocar na "Nova marcação" → pedido só para essa (`id=in.(n1)`), ficam 2 · "Marcar todas como lidas" → "Tudo lido", sem número · aberto com `?n=` → lida e endereço limpo · contador e lista sempre iguais · lint e build OK.
+
+**Para o teu teste no iPhone (depois do push):** o ícone mostra **3** (as notificações de teste) → abrir Notificações → tocar numa → fica lida, o número passa a 2 → "Marcar todas como lidas" → o número desaparece do ícone. Enviar outra notificação de teste e **tocar no push** → abre o painel e essa já aparece lida.

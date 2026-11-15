@@ -24,7 +24,7 @@ export function useDashboard() {
           .lt('start_at', fim)
           .order('start_at'),
         supabase.from('settings').select('owner_name, business_name, late_tolerance_minutes, no_show_flag_threshold').eq('id', 1).single(),
-        supabase.from('notifications').select('id, title, body, appointment_id, created_at').is('read_at', null).order('created_at', { ascending: false }).limit(3),
+        supabase.from('notifications').select('id, type, title, body, appointment_id, created_at, read_at, appointments(start_at)').is('read_at', null).order('created_at', { ascending: false }).limit(3),
         supabase.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null),
       ])
       const falhou = [ap, st, nt, nc].find((r) => r.error)

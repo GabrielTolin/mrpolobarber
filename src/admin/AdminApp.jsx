@@ -3,9 +3,7 @@ import AdminLayout from './AdminLayout'
 import RotaAdmin from './RotaAdmin'
 import Login from './Login'
 import NaoEncontrado from '../public/NaoEncontrado'
-import {
-  Notificacoes,
-} from './pages/Paginas'
+import Notificacoes from './pages/Notificacoes'
 import Inicio from './pages/Inicio'
 import Configuracoes from './pages/Configuracoes'
 import Servicos from './pages/Servicos'
