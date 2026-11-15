@@ -4,19 +4,40 @@ import { ArrowRight, CalendarCheck, Clock, MapPin, MessageCircle, Scissors } fro
 const ICONE = { size: 16, strokeWidth: 1.8, 'aria-hidden': true }
 const BRILHO = { textShadow: '0 0 36px rgba(227, 185, 85, 0.45)' }
 
+// Ícone do Instagram desenhado à mão (o lucide já não traz ícones de marcas).
+function IconeInstagram({ size = 16, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className={className} aria-hidden>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4.2" />
+      <circle cx="17.4" cy="6.6" r="0.6" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 // Página de entrada (landing) — direção da referência 2 do Gabriel: ecrã inteiro
 // com foto de fundo, título grande a dourado com brilho, botão de marcar no topo
 // e destaques em baixo. Curta e direta: sem cabeçalho/risca do layout e sem as
 // caixinhas do passo a passo (essas só aparecem depois de "Marcar horário").
 // Primeiro telemóvel, depois ecrã grande (≥ 1024 px). Sem preços (2.7).
-export default function Entrada({ nome, barbeiro, morada, mapa, whatsapp, horario, resumoHorario, foto, onMarcar }) {
+export default function Entrada({ nome, barbeiro, morada, mapa, whatsapp, instagram, horario, resumoHorario, foto, onMarcar }) {
   return (
     <div className="min-h-svh bg-bg text-fg">
       {/* ── Herói: ocupa o ecrã todo ── */}
       <section className="relative isolate flex min-h-svh flex-col overflow-hidden">
-        {/* Fundo: foto do barbeiro (quando houver) ou luz quente + logótipo */}
+        {/* Fundo: foto do barbeiro (quando houver) ou luz quente + logótipo.
+            Com foto: no telemóvel ocupa o ecrã todo; no ecrã grande fica num quadro à
+            direita (a foto tem 640 px — esticada a toda a largura ficaria desfocada). */}
         {foto ? (
-          <img src={foto} alt={`${barbeiro} a trabalhar`} className="absolute inset-0 -z-20 h-full w-full object-cover" />
+          <>
+            <img src={foto} alt="" aria-hidden className="absolute inset-0 -z-20 h-full w-full object-cover object-[45%_15%] lg:hidden" />
+            {/* A foto é clara no topo (parede branca): escurece para o logótipo e os botões se verem */}
+            <div aria-hidden className="absolute inset-x-0 top-0 -z-10 h-56 bg-gradient-to-b from-black/85 via-black/40 to-transparent lg:hidden" />
+            <div aria-hidden className="absolute inset-0 -z-20 hidden bg-[radial-gradient(ellipse_at_75%_45%,#3a2f17_0%,#15120c_45%,#0a0907_80%)] lg:block" />
+            <figure className="absolute top-1/2 right-[max(2.5rem,calc((100vw-1200px)/2+2.5rem))] hidden aspect-[4/5] w-[34vw] max-w-[440px] -translate-y-1/2 overflow-hidden rounded-2xl border border-line-gold/60 shadow-[0_0_80px_rgba(227,185,85,0.18)] lg:block">
+              <img src={foto} alt={`${barbeiro} a trabalhar`} className="h-full w-full object-cover object-[45%_30%]" />
+            </figure>
+          </>
         ) : (
           <div aria-hidden className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_70%_20%,#3a2f17_0%,#15120c_45%,#0a0907_80%)] lg:bg-[radial-gradient(ellipse_at_75%_40%,#3a2f17_0%,#15120c_45%,#0a0907_80%)]">
             <img
@@ -28,28 +49,41 @@ export default function Entrada({ nome, barbeiro, morada, mapa, whatsapp, horari
           </div>
         )}
         {/* Escurecer para o texto ler bem: de baixo no telemóvel, da esquerda no ecrã grande */}
-        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-black via-black/70 to-black/10 lg:bg-gradient-to-r lg:from-black/95 lg:via-black/60 lg:to-transparent" />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-black via-black/75 to-black/20 lg:bg-gradient-to-r lg:from-black/95 lg:via-black/60 lg:to-transparent" />
 
         {/* Barra do topo: logótipo + Marcar */}
         <header className="mx-auto flex w-full max-w-[1200px] items-center justify-between px-5 pt-4 lg:px-10 lg:pt-6">
           <img src="/brand-logo.webp" alt={nome} className="h-14 w-auto mix-blend-lighten lg:h-16" />
-          <button
+          <div className="flex items-center gap-2">
+            {instagram && (
+              <a
+                href={instagram.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`Instagram ${instagram.handle}`}
+                className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 bg-black/40 text-fg/90 backdrop-blur hover:text-gold"
+              >
+                <IconeInstagram size={18} />
+              </a>
+            )}
+            <button
             type="button"
             onClick={onMarcar}
             className="btn-primary px-4 py-2.5 text-[13px] shadow-[0_0_24px_rgba(227,185,85,0.35)] lg:px-6 lg:text-sm"
           >
             Marcar
-          </button>
+            </button>
+          </div>
         </header>
 
         {/* Texto principal: em baixo no telemóvel, ao centro à esquerda no ecrã grande */}
         <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col justify-end px-5 pb-8 lg:justify-center lg:px-10 lg:pb-20">
-          <div className="lg:max-w-[780px]">
+          <div className={foto ? 'lg:max-w-[560px] xl:max-w-[640px]' : 'lg:max-w-[780px]'}>
             <span className="inline-flex items-center gap-2 rounded-full border border-line-gold bg-black/50 px-3 py-1.5 text-xs text-fg/90 backdrop-blur">
               <Scissors size={13} strokeWidth={1.8} className="text-gold" aria-hidden /> Barbearia em Albufeira
             </span>
 
-            <h1 style={BRILHO} className="mt-4 text-[44px] leading-[0.98] font-extrabold tracking-tight text-gold lg:text-[92px]">
+            <h1 style={BRILHO} className={`mt-4 text-[44px] leading-[0.98] font-extrabold tracking-tight text-gold ${foto ? 'lg:text-[72px] xl:text-[84px]' : 'lg:text-[92px]'}`}>
               O seu estilo,
               <br />
               feito ao detalhe.
@@ -123,6 +157,11 @@ export default function Entrada({ nome, barbeiro, morada, mapa, whatsapp, horari
                 </a>
               )}
             </div>
+            {instagram && (
+              <a href={instagram.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm text-fg/85 hover:text-gold">
+                <IconeInstagram size={16} className="text-gold" /> {instagram.handle}
+              </a>
+            )}
           </div>
         </div>
         <div className="mx-auto max-w-[1200px] border-t border-line-sidebar px-5 py-4 text-xs text-muted-2 lg:px-10">

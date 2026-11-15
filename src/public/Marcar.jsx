@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Check, Copy, MessageCircle } from 'lucide-react'
+import { CalendarPlus, Check, Copy, MessageCircle } from 'lucide-react'
 import Carregando from '../components/Carregando'
 import Passo from './ui/Passo'
 import ListaServicos from './ui/ListaServicos'
 import Calendario from './ui/Calendario'
 import GrelhaHoras from './ui/GrelhaHoras'
 import ResumoMarcacao from './ui/ResumoMarcacao'
+import ProximasMarcacoes from './ui/ProximasMarcacoes'
+import { esquecerCliente, esquecerTudo, guardarCliente, juntarMarcacao, lerCliente } from './lembrar'
+import { criarIcs, descarregarIcs } from './ics'
 import { MENSAGENS, cotarPreco, criarMarcacao, diasDisponiveis, horasDisponiveis, obterInfo, obterServicos } from './publicApi'
 import { dataPorExtenso, formatarData, hojeLisboa, instanteLisboa, somarDias } from '../lib/datas'
 import { formatarTelefone, linkWhatsapp, normalizarTelefone } from '../lib/telefone'
@@ -14,9 +17,19 @@ import { formatarTelefone, linkWhatsapp, normalizarTelefone } from '../lib/telef
 // Fluxo de marcação (6.2, Especificação 2.1): serviço → dia → hora → dados → revisão.
 // O passo vai no endereço (?passo=N) para o "voltar" do telemóvel funcionar;
 // os dados ficam em memória enquanto a página está aberta.
+// 6.3: "Lembrar neste dispositivo" (nome, telemóvel e links das marcações, 2.10)
+// e ecrã de sucesso com link pessoal, calendário (.ics) e WhatsApp.
 
 const ultimoDiaDoMes = (mes) => somarDias(`${somarDias(`${mes}-01`, 32).slice(0, 7)}-01`, -1)
 const porExtenso = (dia) => dataPorExtenso(instanteLisboa(dia, '12:00'))
+
+// Telemóvel guardado (E.164) → como aparece no campo: "912 345 678" para PT, completo para os outros.
+const telefoneParaCampo = (e164) => (e164?.startsWith('+351') ? formatarTelefone(e164).replace('+351 ', '') : (e164 ?? ''))
+
+function dadosIniciais() {
+  const c = lerCliente()
+  return { nome: c?.nome ?? '', telefone: telefoneParaCampo(c?.telefone), observacoes: '', lembrar: true, armadilha: '' }
+}
 
 export default function Marcar() {
   const [params, setParams] = useSearchParams()
@@ -29,7 +42,9 @@ export default function Marcar() {
   const [servico, setServico] = useState(null)
   const [dia, setDia] = useState(null)
   const [hora, setHora] = useState(null) // { start_at, time_local }
-  const [dados, setDados] = useState({ nome: '', telefone: '', observacoes: '', lembrar: true, armadilha: '' })
+  const [dados, setDados] = useState(dadosIniciais)
+  const [lembrado, setLembrado] = useState(() => lerCliente() != null)
+  const [versaoMemoria, setVersaoMemoria] = useState(0) // muda ao esquecer, para o cartão das marcações desaparecer
   const [preco, setPreco] = useState(null)
   const [chave, setChave] = useState(null)
   const [resultado, setResultado] = useState(null)
@@ -64,6 +79,14 @@ export default function Marcar() {
 
   const voltar = () => window.history.back()
 
+  // "Não sou eu / esquecer os meus dados" (2.10 regra 9)
+  const esquecer = () => {
+    esquecerTudo()
+    setDados((d) => ({ ...d, nome: '', telefone: '' }))
+    setLembrado(false)
+    setVersaoMemoria((v) => v + 1)
+  }
+
   return (
     <>
       {aviso && passo < 6 && (
@@ -74,6 +97,7 @@ export default function Marcar() {
 
       {passo === 1 && (
         <>
+          <ProximasMarcacoes key={versaoMemoria} onEsquecer={esquecer} />
           <Passo numero={1} titulo="Escolha o serviço" subtitulo="O preço aparece no fim, antes de confirmar." />
           <ListaServicos
             servicos={servicos}
@@ -132,6 +156,8 @@ export default function Marcar() {
           dia={dia}
           hora={hora}
           dados={dados}
+          lembrado={lembrado}
+          onEsquecer={esquecer}
           onMudar={setDados}
           onVoltar={voltar}
           onContinuar={async () => {
@@ -166,6 +192,13 @@ export default function Marcar() {
               armadilha: dados.armadilha,
             })
             if (resposta.ok) {
+              // Lembrar neste dispositivo (2.10 regras 6–8): só com a opção ligada.
+              if (dados.lembrar) {
+                guardarCliente({ nome: dados.nome.trim(), telefone: normalizarTelefone(dados.telefone) })
+                juntarMarcacao({ codigo: resposta.code, inicio: resposta.start_at, fim: resposta.end_at, servico: resposta.service_name })
+              } else {
+                esquecerCliente()
+              }
               setResultado(resposta)
               ir(6, { substituir: true })
               return null
@@ -195,7 +228,7 @@ export default function Marcar() {
         />
       )}
 
-      {passo === 6 && <Confirmada resultado={resultado} />}
+      {passo === 6 && <Confirmada resultado={resultado} info={info} guardado={dados.lembrar} />}
     </>
   )
 }
@@ -288,7 +321,7 @@ function PassoHora({ servico, dia, selecionada, onVoltar, onEscolher }) {
 }
 
 // ── Passo 4: dados ───────────────────────────────────────────────────────────
-function PassoDados({ servico, dia, hora, dados, onMudar, onVoltar, onContinuar }) {
+function PassoDados({ servico, dia, hora, dados, lembrado, onEsquecer, onMudar, onVoltar, onContinuar }) {
   const [erros, setErros] = useState({})
   const [erroGeral, setErroGeral] = useState(null)
   const [aEnviar, setAEnviar] = useState(false)
@@ -319,6 +352,14 @@ function PassoDados({ servico, dia, hora, dados, onMudar, onVoltar, onContinuar 
         subtitulo={`${formatarData(dia, { ano: false })} · ${hora.time_local} · ${servico.name}`}
         onVoltar={onVoltar}
       />
+      {lembrado && (
+        <p className="mb-4 text-xs text-muted-2">
+          Dados lembrados neste dispositivo.{' '}
+          <button type="button" onClick={onEsquecer} className="text-gold-2 underline">
+            Não sou eu / esquecer
+          </button>
+        </p>
+      )}
       <form onSubmit={submeter} noValidate className="flex flex-col gap-4">
         <label className="block">
           <span className="text-sm font-medium text-muted">Nome</span>
@@ -433,11 +474,16 @@ function PassoRevisao({ servico, dia, hora, dados, preco, whatsapp, onVoltar, on
   )
 }
 
-// ── Passo 6: confirmada (o essencial; o resto do ecrã de sucesso é a 6.3) ────
-function Confirmada({ resultado }) {
+// ── Passo 6: confirmada (6.3) ────────────────────────────────────────────────
+function Confirmada({ resultado, info, guardado }) {
   const link = `${window.location.origin}/m/${resultado.code}`
   const [copiado, setCopiado] = useState(false)
   const primeiroNome = resultado.client_name?.split(' ')[0]
+  const negocio = info?.business_name ?? 'MR Polo Barber'
+  const quando = `${formatarData(resultado.date_local, { ano: false })} às ${resultado.time_local}`
+  const whatsapp = info?.whatsapp_phone
+    ? linkWhatsapp(info.whatsapp_phone, `Olá! Marquei ${resultado.service_name} para ${quando}.`)
+    : null
 
   async function copiar() {
     try {
@@ -447,6 +493,18 @@ function Confirmada({ resultado }) {
     } catch {
       /* sem acesso à área de transferência: o link continua visível para copiar à mão */
     }
+  }
+
+  function adicionarAoCalendario() {
+    const ics = criarIcs({
+      uid: `${resultado.code.slice(0, 16)}@mrpolobarber`,
+      inicio: resultado.start_at,
+      fim: resultado.end_at,
+      titulo: `${resultado.service_name} — ${negocio}`,
+      local: info?.address ?? null,
+      descricao: `Ver ou cancelar a marcação: ${link}`,
+    })
+    descarregarIcs(ics, `marcacao-${resultado.date_local}.ics`)
   }
 
   return (
@@ -467,7 +525,9 @@ function Confirmada({ resultado }) {
       />
       <div className="card mt-5 flex flex-col gap-3 bg-bg/70">
         <p className="text-sm font-semibold">O seu link pessoal</p>
-        <p className="text-xs text-muted">Guarde-o para ver ou cancelar a marcação.</p>
+        <p className="text-xs text-muted">
+          Guarde-o para ver ou cancelar a marcação{guardado ? '. Também fica guardado neste dispositivo.' : '.'}
+        </p>
         <div className="flex gap-2">
           <input readOnly value={link} onFocus={(e) => e.target.select()} className="field truncate bg-bg/70 text-[13px] text-muted" />
           <button type="button" onClick={copiar} className="btn-ghost shrink-0 px-3" aria-label="Copiar link">
@@ -475,9 +535,19 @@ function Confirmada({ resultado }) {
           </button>
         </div>
       </div>
-      <Link to="/" className="btn-ghost mt-5 block w-full text-center">
-        Voltar ao início
-      </Link>
+      <div className="mt-5 flex flex-col gap-2.5">
+        <button type="button" onClick={adicionarAoCalendario} className="btn-gold flex items-center justify-center gap-2">
+          <CalendarPlus size={16} strokeWidth={1.8} aria-hidden /> Adicionar ao calendário
+        </button>
+        {whatsapp && (
+          <a href={whatsapp} target="_blank" rel="noreferrer" className="btn-ghost flex items-center justify-center gap-2">
+            <MessageCircle size={16} strokeWidth={1.8} aria-hidden /> Falar com o barbeiro
+          </a>
+        )}
+        <Link to="/" className="btn-ghost block w-full text-center">
+          Voltar ao início
+        </Link>
+      </div>
     </>
   )
 }

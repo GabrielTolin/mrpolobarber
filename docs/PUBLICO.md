@@ -129,7 +129,7 @@ Dados do teste **apagados** com o OK do Gabriel (4 marcações, 3 clientes, cont
 
 ---
 
-## 6.2 — Fluxo de marcação 🔶 *(implementado em 2026-11-13; à espera do teu teste)*
+## 6.2 — Fluxo de marcação ✅ *(testada e validada pelo Gabriel, 2026-11-13)*
 
 **Rotas:** `/` = página de entrada (`src/public/Inicio.jsx`, dados reais de `public_info`) · `/marcar` = fluxo (`src/public/Marcar.jsx`). Acesso ao backend só pelas funções públicas, em `src/public/publicApi.js` (com as mensagens de cada código de erro).
 
@@ -153,3 +153,33 @@ Dados do teste **apagados** com o OK do Gabriel (4 marcações, 3 clientes, cont
 **Não testado por mim:** carregar em **"Confirmar marcação"** (cria uma marcação real) → fica para o teste do Gabriel.
 
 **Nota:** o nome na secção "Onde estamos" vem de Configurações → Barbearia (hoje "MR Polo Barber").
+
+---
+
+## 6.3 — Confirmação e "lembrar" 🔶 *(implementada em 2026-11-15; à espera do teu teste)*
+
+Segue a Especificação 2.10 (regras 6–10) e a Arquitetura 3.9 §2. **Nada disto vai para o servidor.**
+
+| Peça | Ficheiro | O que faz |
+|---|---|---|
+| Memória do dispositivo | `src/public/lembrar.js` | `mpb.cliente` = `{nome, telefone}` · `mpb.marcacoes` = `[{codigo, inicio, fim, servico}]` (máx. 10). Todo o acesso protegido: com armazenamento bloqueado/navegação privada, marca-se na mesma, só não se lembra |
+| Calendário | `src/public/ics.js` | Ficheiro `.ics` gerado no telemóvel: serviço + nome da barbearia, hora, morada (quando houver), link pessoal na descrição e **lembrete 1 h antes** (avisa o calendário do cliente, sem SMS nem email). Formato RFC 5545 (CRLF, linhas dobradas a 75 bytes) |
+| Próximas marcações | `src/public/ui/ProximasMarcacoes.jsx` | Cartão no **passo 1** (decisão da 6.0). Cada marcação guardada é **confirmada no servidor** (`get_booking`): hora/serviço atualizados se o barbeiro mudou, "Cancelada" se foi cancelada; passadas, concluídas, faltas e códigos inexistentes **saem sozinhas**. "Ver →" abre o link pessoal (`/m/…`, página da 6.4) |
+| Fluxo | `src/public/Marcar.jsx` | Passo 4 **pré-preenchido** com o nome e o telemóvel lembrados + "Dados lembrados neste dispositivo · Não sou eu / esquecer". Ao confirmar: com "Lembrar" ligado guarda o cliente e o link; desligado não guarda nada (e esquece o cliente) |
+| Ecrã de sucesso | `Confirmada` em `Marcar.jsx` | ✓ + resumo + **link pessoal** (copiar) + **Adicionar ao calendário** + **Falar com o barbeiro** (WhatsApp com "Olá! Marquei Barba para ter., 17/11 às 10:00.", só aparece quando o WhatsApp estiver nas Configurações, P-02) + Voltar ao início |
+
+**"Não sou eu / esquecer os meus dados"** (2.10 regra 9): no cartão das próximas marcações e no passo 4. Apaga `mpb.cliente` e `mpb.marcacoes`.
+
+**Verificado (2026-11-15):** `.ics` correto (21 linhas CRLF, link dobrado, nenhuma linha > 75 bytes) · no browser (telemóvel): marcação guardada com código inventado e outra já passada → retiradas, cartão escondido, memória limpa · passo 4 pré-preenchido ("Gabriel Teste" / "933 000 999") · "Não sou eu" esvazia os campos e apaga a memória · consola sem erros · build OK.
+
+**Fica para o teu teste** (precisa de uma marcação real): ecrã de sucesso com "Adicionar ao calendário" (no iPhone deve abrir o Calendário), o cartão "A sua próxima marcação" ao voltar a `/marcar`, e os dados preenchidos na marcação seguinte.
+
+### Ajuste à página de entrada (2026-11-15, pedido do Gabriel)
+- **Foto do Matheus** (enviada pelo Gabriel) em `public/hero-barbeiro.webp` (640 × 641, 45 KB). **Telemóvel:** foto a ocupar o ecrã, escurecida em cima (a parede é branca, para o logótipo e os botões se verem) e em baixo (texto). **Ecrã grande:** foto num quadro à direita com contorno dourado (esticada a toda a largura ficaria desfocada, porque tem só 640 px); o título encolhe um pouco para não lhe tocar (verificado a 1024 px e 1440 px).
+- **Instagram provisório** (`@[instagram]`, a ligar a instagram.com): ícone ao lado do "Marcar" na barra do topo e linha no bloco "Onde estamos". Definido em `src/public/Inicio.jsx` (`INSTAGRAM`). O Gabriel vai confirmar o perfil e reorganizar o resto da página; depois o Instagram pode passar para as Configurações (precisa de uma coluna nova em `settings`).
+- Se houver uma versão da foto com mais resolução (≥ 1200 px), fica mais nítida no telemóvel.
+
+### Pedido do barbeiro: aviso 5 minutos antes de cada cliente
+- **Já está previsto** (Especificação 2.9, Arquitetura 3.8 §2 "Lembrete"): a definição existe no painel, em Configurações → Notificações → "Lembrete antes de cada marcação" (de 5 a 120 minutos; desligado por defeito, 15 min).
+- **Falta o envio**, que é da **etapa das notificações**: tarefa `reminders` (cron a cada minuto) → notificação → push para o telemóvel (Edge Function `send-push`, Web Push). No iPhone, o push só funciona com o painel **instalado no ecrã principal** (PWA) e com as notificações autorizadas.
+- Quando essa etapa estiver feita: ligar o lembrete e pôr **5 minutos**.

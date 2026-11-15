@@ -55,6 +55,8 @@ export const criarMarcacao = ({ serviceId, inicio, nome, telefone, observacoes, 
     p_website: armadilha || null,
   })
 
+export const verMarcacao = (codigo) => chamarAcao('get_booking', { p_code: codigo })
+
 // Mensagens ao cliente para cada código de erro (Arquitetura 3.6 §4, 3.7 §4).
 export const MENSAGENS = {
   SLOT_TAKEN: 'Esse horário acabou de ser ocupado. Escolha outro.',
