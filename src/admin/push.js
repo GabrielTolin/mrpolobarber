@@ -17,7 +17,7 @@ export function ambiente() {
   const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
   const instalado = window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true
   const suportado = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && Boolean(VAPID)
-  return { ios, instalado, suportado, permissao: 'Notification' in window ? Notification.permission : 'unsupported' }
+  return { ios, instalado, suportado, semChave: !VAPID, permissao: 'Notification' in window ? Notification.permission : 'unsupported' }
 }
 
 // O service worker só existe na versão de produção (no `npm run dev` não há).
@@ -40,9 +40,10 @@ async function gravar(sub, userId) {
   if (error) throw Object.assign(new Error(error.message), { codigo: 'GRAVAR' })
 }
 
-// Estados: sem-suporte · instalar (iPhone fora do ecrã principal) · bloqueadas · desativadas · ativas
+// Estados: sem-chave · sem-suporte · instalar (iPhone fora do ecrã principal) · bloqueadas · desativadas · ativas
 async function lerEstado() {
   const amb = ambiente()
+  if (amb.semChave) return { estado: 'sem-chave', amb } // site publicado sem VITE_VAPID_PUBLIC_KEY
   if (amb.ios && !amb.instalado) return { estado: 'instalar', amb }
   if (!amb.suportado) return { estado: 'sem-suporte', amb }
   if (amb.permissao === 'denied') return { estado: 'bloqueadas', amb }

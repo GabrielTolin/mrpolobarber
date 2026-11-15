@@ -134,3 +134,7 @@ Texto das preferências atualizado ("Vale para todos os dispositivos com notific
 3. No iPhone: abrir `mrpolobarber.vercel.app/admin` no Safari → Partilhar → Adicionar ao ecrã principal → abrir pelo ícone → entrar.
 4. Configurações → **Ativar notificações** → Permitir.
 5. **Enviar notificação de teste** → fechar a app → deve chegar "Notificação de teste" e o número no ícone.
+
+**1.º teste do Gabriel (2026-11-15): "não achei para mandar notificação de teste".** Diagnóstico: o código novo já estava publicado, mas **sem a chave pública** (`VITE_VAPID_PUBLIC_KEY` não estava na Vercel no momento do build) → o painel considerava as notificações "não suportadas" e não mostrava o botão Ativar (nem o de teste, que só aparece depois de ativar). Nenhum aparelho registado. A migration da notificação de teste também ainda não estava aplicada.
+- Correção: novo estado **"sem chave"** com a mensagem certa ("falta a chave pública na Vercel… é preciso publicar de novo"), em vez de "este navegador não permite".
+- Falta: Gabriel acrescenta a variável na Vercel e publica de novo; aplicar a migration (com OK).

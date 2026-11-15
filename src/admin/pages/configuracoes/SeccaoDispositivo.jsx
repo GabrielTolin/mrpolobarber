@@ -52,6 +52,13 @@ export default function SeccaoDispositivo() {
         </>
       )}
 
+      {push.estado === 'sem-chave' && (
+        <p className="text-sm text-warn">
+          As notificações ainda não estão configuradas neste site: falta a chave pública (VITE_VAPID_PUBLIC_KEY) na Vercel. Depois de a
+          acrescentar, é preciso publicar de novo.
+        </p>
+      )}
+
       {push.estado === 'sem-suporte' && (
         <p className="text-sm text-muted">
           Este navegador não permite notificações. No telemóvel, use a app instalada no ecrã principal.
