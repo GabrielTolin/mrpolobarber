@@ -1,6 +1,6 @@
 # MR Polo Barber — Área pública
 
-**Etapa 6 — Área pública (marcações online)** · Em curso desde 2026-11-13 (plano validado; design opção B)
+**Etapa 6 — Área pública (marcações online)** · ✅ **Concluída e validada a 2026-11-15** (iniciada a 2026-11-13; design opção B)
 
 A página onde os clientes marcam sozinhos, sem conta, e o link pessoal para ver e cancelar. Segue a [Especificação](ESPECIFICACAO.md) (2.1, 2.4–2.7, 2.10, 2.14) e a [Arquitetura](ARQUITETURA.md) (3.6–3.9). O painel (Etapa 5) já está feito e testado.
 
@@ -156,7 +156,7 @@ Dados do teste **apagados** com o OK do Gabriel (4 marcações, 3 clientes, cont
 
 ---
 
-## 6.3 — Confirmação e "lembrar" 🔶 *(implementada em 2026-11-15; à espera do teu teste)*
+## 6.3 — Confirmação e "lembrar" ✅ *(testada pelo Gabriel no iPhone, 2026-11-15)*
 
 Segue a Especificação 2.10 (regras 6–10) e a Arquitetura 3.9 §2. **Nada disto vai para o servidor.**
 
@@ -186,7 +186,7 @@ Segue a Especificação 2.10 (regras 6–10) e a Arquitetura 3.9 §2. **Nada dis
 
 ---
 
-## 6.4 — Link pessoal `/m/:código` 🔶 *(implementado em 2026-11-15; à espera do teu teste)*
+## 6.4 — Link pessoal `/m/:código` ✅ *(testado pelo Gabriel no iPhone, 2026-11-15)*
 
 `src/public/LinkPessoal.jsx` (ecrã 7 aprovado na 6.0). Usa só `get_booking` e `cancel_booking` (6.1).
 
@@ -289,7 +289,7 @@ Fluxo com os **dados reais** até à revisão e **só a resposta de erro simulad
 
 ---
 
-## 6.7 — Testes e validação 🔶 *(feita em 2026-11-15; falta o teu teste no iPhone)*
+## 6.7 — Testes e validação ✅ *(teste no iPhone feito pelo Gabriel, 2026-11-15)*
 
 ### Teste de ponta a ponta (dados reais, browser em tamanho de telemóvel)
 Entrada → "Marcar horário" → Barba → 23/11 → 10:00 → nome "TESTE-6.7 Ponta" + telemóvel → revisão (9 €) → **"Confirmar" com duplo clique** → ecrã de sucesso → `.ics` → voltar a `/marcar` → cartão "A sua próxima marcação" → passo 4 já preenchido → link pessoal → **cancelar** → verificado na base de dados.
@@ -377,3 +377,7 @@ Em `https://mrpolobarber.vercel.app` **depois do push**:
 ### Dados de teste criados nesta etapa
 2 marcações online (23/11 10:00 "TESTE-6.7 Ponta", já cancelada; 24/11 10:30 "TESTE-6.7 Sem memoria") e os 2 clientes respetivos (+351933670001, +351933670002). A limpeza só corre com o OK do Gabriel.
 **Limpeza (2026-11-15, com o OK do Gabriel):** as 2 marcações e os 2 clientes "TESTE-6.7", e os contadores de pedidos, foram apagados. Confirmado: 0 dados de teste da 6.7, proteções contra apagar religadas. Ficam as 3 marcações de teste do Gabriel (para a limpeza antes do lançamento).
+
+---
+
+✅ **ETAPA 6 FECHADA (2026-11-15).** O Gabriel testou no iPhone a lista da 6.7: "está tudo ok". Pendentes que passam para o lançamento: P-02 (morada escrita, WhatsApp, nome da barbearia), P-03 (dados RGPD e prazo → anonimização), foto em maior resolução (opcional), sábado 09:00–13:00 por confirmar, limpar as marcações de teste. Critério em aberto da 2.1 ("o barbeiro recebe a notificação") → **Etapa 7 — Notificações**.

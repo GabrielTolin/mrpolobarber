@@ -33,6 +33,8 @@ self.addEventListener('push', (event) => {
     icon: '/pwa-192x192.png',
     badge: '/pwa-64x64.png',
     data: { url: data.url || '/admin' },
+    // Uma notificação por acontecimento (se o mesmo chegar duas vezes, substitui em vez de duplicar)
+    tag: data.tag,
   }
 
   const tarefas = [self.registration.showNotification(title, options)]

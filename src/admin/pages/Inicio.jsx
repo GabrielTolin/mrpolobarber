@@ -9,6 +9,7 @@ import { useAgora } from '../../hooks/useAgora'
 import Carregando from '../../components/Carregando'
 import CabecalhoPagina from '../CabecalhoPagina'
 import { resumoDoCliente, useDashboard } from './inicio/useDashboard'
+import AvisoNotificacoes from './inicio/AvisoNotificacoes'
 
 const COR_PONTO = { confirmed: 'bg-ok', in_progress: 'bg-gold', completed: 'bg-muted-2', cancelled: 'bg-muted-2', no_show: 'bg-warn' }
 
@@ -76,6 +77,7 @@ export default function Inicio() {
 
       {erro && <p className="mb-4 text-sm text-warn" role="alert">{erro}</p>}
       {erroAcao && <p className="mb-4 text-sm text-warn" role="alert">{erroAcao}</p>}
+      <AvisoNotificacoes />
 
       {!dados ? (
         !erro && <Carregando />

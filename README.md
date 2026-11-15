@@ -12,6 +12,7 @@ Sistema de marcações para a barbearia MR Polo Barber (Albufeira): página púb
 | [docs/INFRAESTRUTURA.md](docs/INFRAESTRUTURA.md) | Etapa 4: configuração e infraestrutura |
 | [docs/PAINEL.md](docs/PAINEL.md) | Etapa 5: painel do barbeiro (inclui o sistema visual) |
 | [docs/PUBLICO.md](docs/PUBLICO.md) | Etapa 6: área pública (marcações online) |
+| [docs/NOTIFICACOES.md](docs/NOTIFICACOES.md) | Etapa 7: notificações ao barbeiro (push, lembrete, resumo do dia) |
 
 ## Tecnologias
 

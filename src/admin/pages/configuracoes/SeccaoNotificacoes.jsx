@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { horaCurta } from '../../../lib/datas'
 import Mensagem from './Mensagem'
 
-// Preferências de notificações (1.9, 2.9, 2.13 §4). O envio chega na etapa das
-// notificações; as escolhas ficam já guardadas.
+// Preferências de notificações (1.9, 2.9, 2.13 §4): que tipos são enviados.
+// Ativar/desativar no aparelho fica em SeccaoDispositivo (7.3).
 export default function SeccaoNotificacoes({ settings, gravar }) {
   const [v, setV] = useState({
     notify_new_booking: settings.notify_new_booking,
@@ -41,8 +41,7 @@ export default function SeccaoNotificacoes({ settings, gravar }) {
     <form onSubmit={handleSubmit} className="card flex flex-col gap-4">
       <h2 className="card-title">Notificações</h2>
       <p className="text-sm text-muted">
-        Escolha o que quer receber no telemóvel. As notificações são ativadas numa etapa própria; estas escolhas já
-        ficam guardadas.
+        Escolha o que quer receber. Vale para todos os dispositivos com notificações ativas e para a lista de notificações do painel.
       </p>
 
       <Opcao label="Nova marcação online" checked={v.notify_new_booking} onChange={(c) => mudar('notify_new_booking', c)} />
