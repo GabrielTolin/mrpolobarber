@@ -226,3 +226,154 @@ Segue a Especificação 2.10 (regras 6–10) e a Arquitetura 3.9 §2. **Nada dis
 - **Botões clicáveis** (pedido do Gabriel): no topo, por baixo de "Marcar horário", **Como chegar** (Google Maps) e **Instagram** lado a lado; no fundo, **Ver no mapa**, **@mathybarber** e (quando houver) **WhatsApp**; mantém-se o ícone do Instagram ao lado do "Marcar" na barra do topo. Tudo abre numa janela nova. Verificado a 375 px (o topo continua a caber no primeiro ecrã) e a 1440 px; consola sem erros.
 - **Ainda em falta (P-02):** morada escrita e WhatsApp nas Configurações; nome da barbearia ainda "MR Polo Barber".
 - **Texto do topo (2026-11-15, escolha do Gabriel):** título **"Mr. Polo Barber Shop"** (era "O seu estilo, feito ao detalhe.") e por baixo só **"Marque online em 1 minuto e fica confirmado na hora."** (saiu "Corte, barba e cuidado masculino com o Matheus."). Linhas equilibradas no telemóvel.
+
+---
+
+## 6.5 — Casos excecionais ✅ *(validada 2026-11-15)*
+
+Base: Especificação 2.1 (casos excecionais e critérios) e Arquitetura 3.6 §4. A 6.2 já tratava quase tudo; aqui foi **comparado caso a caso, corrigido e testado**.
+
+### Correções
+1. **"Sem vagas nos próximos 30 dias"** (faltava): o passo do dia pede agora **todos os dias até ao limite de uma vez** (em blocos de 60 dias, o máximo do servidor). Sem nenhum → o calendário é trocado por **"Sem vagas nos próximos dias"** + botão **Falar com o barbeiro** (quando o WhatsApp estiver nas Configurações; sem ele, sugere outro serviço). Com vagas, o calendário **abre no 1.º mês que tem vagas**.
+2. **Textos iguais aos da especificação:** "Não é possível marcar online. Contacte o barbeiro." · **"Já tem 2 marcações agendadas. Para mais, contacte o barbeiro."** (o número vem do servidor, segue a definição do painel).
+
+### Resultado (testado no browser, telemóvel, 2026-11-15)
+Fluxo com os **dados reais** até à revisão e **só a resposta de erro simulada** no browser (nenhuma marcação criada):
+
+| Caso (2.1) | Resultado |
+|---|---|
+| Horário ocupado entre a hora e a confirmação | ✅ "Esse horário acabou de ser ocupado. Escolha outro." → volta à **hora**; ao escolher outra, **nome e telemóvel mantêm-se** e o aviso desaparece |
+| Antecedência passou enquanto escolhia | ✅ "Esse horário já não está disponível. Escolha outro." → volta à hora |
+| Telemóvel bloqueado | ✅ Na revisão: "Não é possível marcar online. Contacte o barbeiro." (+ WhatsApp quando existir). Não grava |
+| Já com 2 marcações futuras | ✅ "Já tem 2 marcações agendadas. Para mais, contacte o barbeiro." (+ WhatsApp) |
+| Sem vagas nos próximos 30 dias | ✅ Mensagem em vez do calendário |
+| Telemóvel inválido (`123`, `91234567`) | ✅ Erro no campo, não avança, **nem chega a ir ao servidor** · `+44 7700 900123` e `00351 912 345 678` passam |
+| Demasiados pedidos | ✅ "Demasiadas tentativas. Tente mais tarde ou contacte o barbeiro." |
+| Sem rede ao confirmar | ✅ "Sem ligação…" · a nova tentativa leva **a mesma chave** (2 tentativas → mesma chave), por isso nunca duplica |
+
+**Do lado do servidor** estes casos já foram provados na 6.1 (testes SQL e concorrência real): `SLOT_TAKEN`, `TOO_LATE`, `PHONE_BLOCKED`, `LIMIT_REACHED` (incl. 3 pedidos simultâneos do mesmo telemóvel), `RATE_LIMITED`, 20 pedidos simultâneos → 1 marcação.
+
+**Critério ainda em aberto da 2.1:** "O barbeiro recebe a notificação da nova marcação" → etapa das notificações.
+
+**6.5 validada pelo Gabriel (2026-11-15).**
+
+---
+
+## 6.6 — Privacidade ✅ *(validada 2026-11-15)*
+
+- **Página `/privacidade`** (`src/public/Privacidade.jsx`), com o layout público (logótipo, risca, rodapé). Já ligada no rodapé de todas as páginas, na página de entrada e no aviso do passo 4.
+- No **passo 4** o link abre **noutro separador**, para o cliente não perder o que já escreveu.
+- **O texto descreve o que o sistema faz de facto** (Arquitetura 3.7–3.9):
+
+| Secção | Conteúdo |
+|---|---|
+| Quem é o responsável | Nome, NIF, morada, contacto → **marcadores (P-03)** |
+| Que dados usamos | Nome, telemóvel, observações · dados da marcação · histórico (faltas, cancelamentos, notas) · IP e telemóvel **só cifrados e apagados em 24 h** · sem email, SMS, publicidade nem cookies de estatística |
+| Para que os usamos | Gerir a marcação (RGPD art. 6.º, 1, b) · proteger o site contra abusos (interesse legítimo, art. 6.º, 1, f) · sem decisões automáticas |
+| O que fica no seu telemóvel | "Lembrar neste dispositivo": nome, telemóvel e links **só no aparelho** · "Não sou eu / esquecer" apaga |
+| Quem tem acesso | Só o barbeiro · subcontratantes **Supabase** (UE, Irlanda) e **Vercel** · Google Maps, Instagram e WhatsApp só se o cliente os abrir |
+| Durante quanto tempo | Clientes inativos: **marcador do prazo (proposta 2 anos)** → nome, telemóvel e notas apagados, marcações anonimizadas · registos de segurança 24 h |
+| Os seus direitos | Ver, corrigir, apagar, limitar, opor-se, cópia digital · resposta até 1 mês · reclamação à **CNPD** |
+| Alterações | Nova versão publicada na página, com data |
+
+**Marcadores por preencher antes do lançamento** (aparecem destacados a laranja na página): `[DATA]` · `[NOME DO RESPONSÁVEL]` · `[NIF]` · `[MORADA]` · `[EMAIL OU TELEFONE]` · `[PRAZO — proposta: 2 anos]`.
+
+**Pendentes ligados a isto (antes do lançamento):**
+- P-03: dados do responsável e prazo de conservação (Gabriel / barbeiro).
+- **Anonimização automática** dos clientes inativos ao fim do prazo (a política promete-a; a Arquitetura já a previa "para quando o prazo estiver definido") → tarefa agendada a criar quando o prazo for decidido.
+- **Revisão do texto** por quem acompanhe a parte legal do negócio: o texto segue o RGPD e o que o sistema faz, mas não substitui aconselhamento jurídico.
+
+**Verificado (2026-11-15):** página no telemóvel sem deslocamento lateral, 6 marcadores visíveis, consola sem erros · a Vercel já reencaminha qualquer endereço para a app (`rewrites`), por isso `/privacidade` abre diretamente · build OK.
+
+**6.6 validada pelo Gabriel (2026-11-15).**
+
+---
+
+## 6.7 — Testes e validação 🔶 *(feita em 2026-11-15; falta o teu teste no iPhone)*
+
+### Teste de ponta a ponta (dados reais, browser em tamanho de telemóvel)
+Entrada → "Marcar horário" → Barba → 23/11 → 10:00 → nome "TESTE-6.7 Ponta" + telemóvel → revisão (9 €) → **"Confirmar" com duplo clique** → ecrã de sucesso → `.ics` → voltar a `/marcar` → cartão "A sua próxima marcação" → passo 4 já preenchido → link pessoal → **cancelar** → verificado na base de dados.
+
+### Matriz de critérios de aceitação
+✅ verificado nesta etapa · ✅ (6.x) verificado na subetapa indicada · 📱 teste do Gabriel no iPhone · ⏳ fica para outra etapa
+
+**2.1 — Marcação pelo cliente**
+| Critério | Estado | Prova |
+|---|---|---|
+| Marcação completa sem conta, no telemóvel | ✅ | Ponta a ponta acima · 📱 falta no iPhone real |
+| Nenhum preço antes da revisão | ✅ (6.1/6.2) | `public_services` sem preços; preço só no passo 5 |
+| Habitual vê preço habitual, desconhecido vê visitante | ✅ (6.1) | T4 (11 € vs 9 €) |
+| Só horários que cabem inteiros (almoço, fecho) e com 2 h de antecedência | ✅ (6.1/6.2) | Última da manhã 11:30 para 25 min com almoço às 12:00; `TOO_LATE` |
+| Domingos, feriados e dias bloqueados não selecionáveis | ✅ (6.2) | Calendário com dias reais (domingo apagado) |
+| Dois clientes ao mesmo tempo → só um fica, o outro volta à hora sem perder dados | ✅ (6.1 + 6.5) | 20 simultâneos → 1; ecrã volta à hora com nome/telemóvel |
+| Número bloqueado não marca | ✅ (6.1 + 6.5) | `PHONE_BLOCKED` + mensagem |
+| 3.ª marcação futura recusada | ✅ (6.1 + 6.5) | `LIMIT_REACHED` (também com 3 pedidos simultâneos) |
+| Ecrã final com link pessoal e `.ics` válido | ✅ | Link mostrado; `.ics` `text/calendar`, UTC, lembrete 1 h, linhas dobradas |
+| O barbeiro recebe a notificação | ⏳ | Etapa das notificações |
+| A página pública nunca mostra dados de outros | ✅ | `quote_price` devolve só `ok,price_cents`; código alterado → `NOT_FOUND` |
+
+**2.5 — Reservas simultâneas**
+| Critério | Estado | Prova |
+|---|---|---|
+| Ver/escolher um horário não o tira aos outros | ✅ | Não há reservas temporárias: só `create_booking` ocupa |
+| 2 pedidos simultâneos → 1 marcação | ✅ (6.1) | 20 simultâneos → 1 |
+| Recusado volta à hora sem perder dados | ✅ (6.5) | |
+| Duplo clique → 1 marcação | ✅ | Ponta a ponta: 2 cliques → **1 pedido**; servidor idempotente (6.1) |
+| Bloqueio criado depois de ver os horários impede a confirmação | ✅ | Teste B → `SLOT_TAKEN` |
+| Sobreposição manual do barbeiro nunca abre vaga no público | ✅ | Teste C: aviso, grava como intencional, sem vaga |
+| Limite de 2 resiste a pedidos simultâneos | ✅ (6.1) | 3 simultâneos → 2 |
+
+**2.6 — Alterar e cancelar** (parte que toca a área pública)
+| Critério | Estado | Prova |
+|---|---|---|
+| Link pessoal sem editar, só cancelar dentro do prazo | ✅ (6.4) | |
+| Depois de cancelar, "Marcar novo horário" | ✅ | Ponta a ponta |
+| Barbeiro muda a hora: antiga livre, nova ocupada | ✅ | Teste A |
+| Link mostra a nova hora e o prazo conta a partir dela | ✅ | Teste A: 09:00 → 11:00, cancelar até 09:00 |
+| Mudar Habitual não altera marcações existentes | ✅ | Teste D: continua 9 € |
+| Cada alteração no histórico | ✅ | Ponta a ponta: "cliente: criada → cancelada" |
+| (restantes critérios da 2.6 são do painel) | ✅ (Etapa 5) | |
+
+**2.10 — Lembrar no dispositivo**
+| Critério | Estado | Prova |
+|---|---|---|
+| Número novo cria o cliente; existente liga à ficha certa; nome escrito não altera a ficha | ✅ (6.1) | T5, T10 |
+| Nunca mostra o nome/dados de outra pessoa pelo número | ✅ | Teste E |
+| Com "Lembrar", nome e telemóvel preenchidos na visita seguinte | ✅ | Ponta a ponta |
+| "As suas próximas marcações" com acesso ao cancelamento | ✅ | Ponta a ponta: cartão → link → cancelar |
+| "Não sou eu / esquecer" apaga | ✅ (6.3) | |
+| Noutro dispositivo, campos vazios | ✅ | Armazenamento vazio/bloqueado → campos vazios |
+| Sem SMS | ✅ | Não existe nenhum envio |
+
+**3.6 / 3.7 / 3.9 — Técnicos**
+| Critério | Estado | Prova |
+|---|---|---|
+| Base de dados sem códigos em claro | ✅ | Ponta a ponta: só o hash |
+| Com o armazenamento bloqueado, marca-se na mesma | ✅ | Marcação real feita com o armazenamento bloqueado (ver correção abaixo) |
+| Público sem acesso a tabelas | ✅ | 16/16 tabelas → 401 |
+| Público só executa as funções públicas | ✅ | Exatamente as 8 |
+| RLS em todas as tabelas · funções privilegiadas com `search_path` fixo | ✅ | 16/16 · 0 sem `search_path` |
+| Registos de contas desligados | ✅ | `disable_signup = true` |
+| Limite de pedidos | ✅ (6.1) | 5/h IP, 3/h telemóvel, 30/h preço |
+| Advisors de segurança da Supabase | 📱 | O conector não vê esta conta: ver no painel da Supabase (Advisors → Security) |
+
+Também: lint OK · build OK · `npm audit` (produção) **0 vulnerabilidades**.
+
+### Correções feitas na 6.7
+1. **Cliente Supabase próprio da área pública** (`src/lib/supabasePublico.js`, sem sessão nem armazenamento). Ao simular o armazenamento bloqueado a meio da visita, os pedidos falhavam porque o cliente do painel lê a sessão do navegador antes de cada pedido. Num bloqueio real (desde o início) a biblioteca já usa memória, mas assim a área pública deixa de depender da sessão do painel para tudo.
+2. **"Também fica guardado neste dispositivo"** só aparece quando a gravação resulta mesmo (com o armazenamento bloqueado já não aparece).
+
+### 📱 Teste do Gabriel no iPhone (e noutro telemóvel)
+Em `https://mrpolobarber.vercel.app` **depois do push**:
+1. Página de entrada: foto, título, botões **Como chegar** (abre o Maps) e **Instagram** (abre @mathybarber).
+2. Marcar um horário até ao fim; no ecrã final, **Adicionar ao calendário** → deve abrir o Calendário do iPhone com o evento e o alerta 1 h antes.
+3. Copiar o link pessoal e abri-lo; **cancelar**.
+4. Voltar a `/marcar`: cartão "A sua próxima marcação" (com "Cancelada") e dados preenchidos no passo 4.
+5. "Não sou eu / esquecer" → campos vazios.
+6. No painel: a marcação aparece como **Online**, cancelada **pelo cliente**.
+7. Repetir 2–4 noutro telemóvel (Android ou outro navegador).
+8. Painel da Supabase → **Advisors → Security**: sem avisos novos.
+
+### Dados de teste criados nesta etapa
+2 marcações online (23/11 10:00 "TESTE-6.7 Ponta", já cancelada; 24/11 10:30 "TESTE-6.7 Sem memoria") e os 2 clientes respetivos (+351933670001, +351933670002). A limpeza só corre com o OK do Gabriel.
+**Limpeza (2026-11-15, com o OK do Gabriel):** as 2 marcações e os 2 clientes "TESTE-6.7", e os contadores de pedidos, foram apagados. Confirmado: 0 dados de teste da 6.7, proteções contra apagar religadas. Ficam as 3 marcações de teste do Gabriel (para a limpeza antes do lançamento).

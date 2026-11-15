@@ -18,11 +18,13 @@ function ler(chave, valorPorDefeito) {
   }
 }
 
+// Devolve true se ficou mesmo guardado (false com o armazenamento bloqueado).
 function escrever(chave, valor) {
   try {
     window.localStorage.setItem(chave, JSON.stringify(valor))
+    return true
   } catch {
-    /* armazenamento indisponível: ignora */
+    return false
   }
 }
 
@@ -48,13 +50,14 @@ export function lerMarcacoes() {
 }
 
 export function guardarMarcacoes(lista) {
-  if (lista.length) escrever(MARCACOES, lista.slice(-MAXIMO))
-  else apagar(MARCACOES)
+  if (lista.length) return escrever(MARCACOES, lista.slice(-MAXIMO))
+  apagar(MARCACOES)
+  return true
 }
 
 export function juntarMarcacao(marcacao) {
   const lista = lerMarcacoes().filter((m) => m.codigo !== marcacao.codigo)
-  guardarMarcacoes([...lista, marcacao])
+  return guardarMarcacoes([...lista, marcacao])
 }
 
 // "Não sou eu / esquecer": apaga tudo deste dispositivo.

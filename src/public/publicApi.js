@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase'
+import { supabasePublico as supabase } from '../lib/supabasePublico'
 import { DIAS_SEMANA } from '../lib/datas'
 
 // Acesso da área pública ao backend: SÓ funções públicas (6.1, Arquitetura 3.7 §3).
@@ -58,12 +58,18 @@ export const criarMarcacao = ({ serviceId, inicio, nome, telefone, observacoes, 
 export const verMarcacao = (codigo) => chamarAcao('get_booking', { p_code: codigo })
 export const cancelarMarcacao = (codigo) => chamarAcao('cancel_booking', { p_code: codigo })
 
-// Mensagens ao cliente para cada código de erro (Arquitetura 3.6 §4, 3.7 §4).
+// Mensagens ao cliente para cada código de erro (Arquitetura 3.6 §4, 3.7 §4;
+// textos da Especificação 2.1, casos excecionais).
+export const mensagemErro = (resposta) =>
+  resposta?.error === 'LIMIT_REACHED' && resposta.limit
+    ? `Já tem ${resposta.limit} ${resposta.limit === 1 ? 'marcação agendada' : 'marcações agendadas'}. Para mais, contacte o barbeiro.`
+    : (MENSAGENS[resposta?.error] ?? MENSAGENS.NETWORK)
+
 export const MENSAGENS = {
   SLOT_TAKEN: 'Esse horário acabou de ser ocupado. Escolha outro.',
   TOO_LATE: 'Esse horário já não está disponível. Escolha outro.',
-  PHONE_BLOCKED: 'Não é possível marcar online com este número. Contacte o barbeiro.',
-  LIMIT_REACHED: 'Já tem marcações agendadas no limite permitido. Para marcar outra, contacte o barbeiro.',
+  PHONE_BLOCKED: 'Não é possível marcar online. Contacte o barbeiro.',
+  LIMIT_REACHED: 'Já tem 2 marcações agendadas. Para mais, contacte o barbeiro.',
   INVALID_PHONE: 'Confirme o número de telemóvel.',
   INVALID_NAME: 'Escreva o seu nome.',
   INVALID_NOTES: 'As observações podem ter no máximo 200 caracteres.',

@@ -10,7 +10,7 @@ import ResumoMarcacao from './ui/ResumoMarcacao'
 import ProximasMarcacoes from './ui/ProximasMarcacoes'
 import { esquecerCliente, esquecerTudo, guardarCliente, juntarMarcacao, lerCliente } from './lembrar'
 import { criarIcs, descarregarIcs } from './ics'
-import { MENSAGENS, cotarPreco, criarMarcacao, diasDisponiveis, horasDisponiveis, obterInfo, obterServicos } from './publicApi'
+import { MENSAGENS, mensagemErro, cotarPreco, criarMarcacao, diasDisponiveis, horasDisponiveis, obterInfo, obterServicos } from './publicApi'
 import { dataPorExtenso, formatarData, hojeLisboa, instanteLisboa, somarDias } from '../lib/datas'
 import { formatarTelefone, linkWhatsapp, normalizarTelefone } from '../lib/telefone'
 
@@ -20,7 +20,6 @@ import { formatarTelefone, linkWhatsapp, normalizarTelefone } from '../lib/telef
 // 6.3: "Lembrar neste dispositivo" (nome, telemóvel e links das marcações, 2.10)
 // e ecrã de sucesso com link pessoal, calendário (.ics) e WhatsApp.
 
-const ultimoDiaDoMes = (mes) => somarDias(`${somarDias(`${mes}-01`, 32).slice(0, 7)}-01`, -1)
 const porExtenso = (dia) => dataPorExtenso(instanteLisboa(dia, '12:00'))
 
 // Telemóvel guardado (E.164) → como aparece no campo: "912 345 678" para PT, completo para os outros.
@@ -48,6 +47,7 @@ export default function Marcar() {
   const [preco, setPreco] = useState(null)
   const [chave, setChave] = useState(null)
   const [resultado, setResultado] = useState(null)
+  const [guardado, setGuardado] = useState(false) // a marcação ficou mesmo guardada no dispositivo?
   const [aviso, setAviso] = useState(null) // mensagem no topo do passo (ex.: horário ocupado entretanto)
 
   // Nunca mostrar um passo cujos dados anteriores faltam (ex.: abrir ?passo=4 diretamente).
@@ -195,9 +195,10 @@ export default function Marcar() {
               // Lembrar neste dispositivo (2.10 regras 6–8): só com a opção ligada.
               if (dados.lembrar) {
                 guardarCliente({ nome: dados.nome.trim(), telefone: normalizarTelefone(dados.telefone) })
-                juntarMarcacao({ codigo: resposta.code, inicio: resposta.start_at, fim: resposta.end_at, servico: resposta.service_name })
+                setGuardado(juntarMarcacao({ codigo: resposta.code, inicio: resposta.start_at, fim: resposta.end_at, servico: resposta.service_name }))
               } else {
                 esquecerCliente()
+                setGuardado(false)
               }
               setResultado(resposta)
               ir(6, { substituir: true })
@@ -223,12 +224,12 @@ export default function Marcar() {
               ir(4, { substituir: true })
               return null
             }
-            return resposta.error
+            return resposta
           }}
         />
       )}
 
-      {passo === 6 && <Confirmada resultado={resultado} info={info} guardado={dados.lembrar} />}
+      {passo === 6 && <Confirmada resultado={resultado} info={info} guardado={guardado} />}
     </>
   )
 }
@@ -236,49 +237,72 @@ export default function Marcar() {
 // ── Passo 2: dia ─────────────────────────────────────────────────────────────
 function PassoDia({ servico, limite, selecionado, whatsapp, onVoltar, onEscolher }) {
   const hoje = hojeLisboa()
-  const [mes, setMes] = useState((selecionado ?? hoje).slice(0, 7))
+  // Todos os dias com vagas até ao limite (30 dias), de uma vez: assim sabe-se logo
+  // se não há vagas nenhuma (2.1) e o calendário abre no 1.º mês com vagas.
   const [estado, setEstado] = useState({ chave: null, dias: null, erro: null })
-  const chave = `${servico.id}|${mes}`
+  const [mesEscolhido, setMesEscolhido] = useState(selecionado?.slice(0, 7) ?? null)
+  const chave = `${servico.id}|${hoje}|${limite}`
 
   useEffect(() => {
     const vivo = { atual: true }
-    const de = `${mes}-01` < hoje ? hoje : `${mes}-01`
-    const ate = ultimoDiaDoMes(mes) > limite ? limite : ultimoDiaDoMes(mes)
-    diasDisponiveis(servico.id, de, ate)
-      .then((dias) => vivo.atual && setEstado({ chave, dias, erro: null }))
+    // O servidor aceita no máximo 63 dias por pedido: divide em blocos de 60.
+    const blocos = []
+    for (let de = hoje; de <= limite; de = somarDias(de, 60)) {
+      const ate = somarDias(de, 59)
+      blocos.push([de, ate > limite ? limite : ate])
+    }
+    Promise.all(blocos.map(([de, ate]) => diasDisponiveis(servico.id, de, ate)))
+      .then((conjuntos) => vivo.atual && setEstado({ chave, dias: new Set(conjuntos.flatMap((c) => [...c])), erro: null }))
       .catch((e) => vivo.atual && setEstado({ chave, dias: new Set(), erro: MENSAGENS[e.codigo] ?? MENSAGENS.NETWORK }))
     return () => {
       vivo.atual = false
     }
-  }, [chave, servico.id, mes, hoje, limite])
+  }, [chave, servico.id, hoje, limite])
 
   const carregado = estado.chave === chave
-  const mudarMes = (n) => setMes(somarDias(`${mes}-15`, n * 30).slice(0, 7))
+  const primeiroLivre = carregado && estado.dias.size ? [...estado.dias].sort()[0] : null
+  const mes = mesEscolhido ?? (primeiroLivre ?? hoje).slice(0, 7)
+  const mudarMes = (n) => setMesEscolhido(somarDias(`${mes}-15`, n * 30).slice(0, 7))
+  const semVagas = carregado && !estado.erro && estado.dias.size === 0
 
   return (
     <>
       <Passo numero={2} titulo="Escolha o dia" subtitulo={`${servico.name} · ${servico.duration_minutes} min`} onVoltar={onVoltar} />
-      <div className={carregado ? '' : 'pointer-events-none opacity-50'}>
-        <Calendario
-          mes={mes}
-          disponiveis={carregado ? estado.dias : new Set()}
-          selecionado={selecionado}
-          onEscolher={onEscolher}
-          onMudarMes={mudarMes}
-          podeAnterior={mes > hoje.slice(0, 7)}
-          podeSeguinte={mes < limite.slice(0, 7)}
-        />
-      </div>
-      {carregado && estado.erro && <p className="mt-4 text-sm text-warn">{estado.erro}</p>}
-      {carregado && !estado.erro && estado.dias.size === 0 && (
-        <div className="mt-4 text-sm text-muted">
-          <p>Não há vagas neste mês{mes < limite.slice(0, 7) ? '. Veja o mês seguinte.' : '.'}</p>
-          {whatsapp && (
-            <a href={whatsapp} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 text-gold-2 underline">
-              <MessageCircle size={14} strokeWidth={1.8} aria-hidden /> Falar com o barbeiro
+
+      {semVagas ? (
+        // Sem vagas nos próximos 30 dias (2.1, casos excecionais): mensagem + WhatsApp
+        <div className="card bg-bg/70 text-center">
+          <p className="font-serif text-[24px] leading-tight font-semibold">Sem vagas nos próximos dias</p>
+          <p className="mt-2 text-sm text-muted">
+            De momento não há horários livres para {servico.name.toLowerCase()} nos próximos 30 dias. Fale com o barbeiro para ver outra
+            opção.
+          </p>
+          {whatsapp ? (
+            <a href={whatsapp} target="_blank" rel="noreferrer" className="btn-primary mt-5 flex items-center justify-center gap-2">
+              <MessageCircle size={16} strokeWidth={1.8} aria-hidden /> Falar com o barbeiro
             </a>
+          ) : (
+            <p className="mt-4 text-xs text-muted-2">Pode também escolher outro serviço.</p>
           )}
         </div>
+      ) : (
+        <>
+          <div className={carregado ? '' : 'pointer-events-none opacity-50'}>
+            <Calendario
+              mes={mes}
+              disponiveis={carregado ? estado.dias : new Set()}
+              selecionado={selecionado}
+              onEscolher={onEscolher}
+              onMudarMes={mudarMes}
+              podeAnterior={mes > hoje.slice(0, 7)}
+              podeSeguinte={mes < limite.slice(0, 7)}
+            />
+          </div>
+          {carregado && estado.erro && <p className="mt-4 text-sm text-warn">{estado.erro}</p>}
+          {carregado && !estado.erro && ![...estado.dias].some((d) => d.startsWith(mes)) && (
+            <p className="mt-4 text-sm text-muted">Não há vagas neste mês. Veja o outro mês.</p>
+          )}
+        </>
       )}
     </>
   )
@@ -411,7 +435,7 @@ function PassoDados({ servico, dia, hora, dados, lembrado, onEsquecer, onMudar, 
 
         <p className="text-xs text-muted-2">
           Os seus dados são usados apenas para gerir a marcação.{' '}
-          <Link to="/privacidade" className="text-gold-2 underline">
+          <Link to="/privacidade" target="_blank" rel="noreferrer" className="text-gold-2 underline">
             Política de privacidade
           </Link>
         </p>
@@ -437,13 +461,14 @@ function PassoRevisao({ servico, dia, hora, dados, preco, whatsapp, onVoltar, on
     enviado.current = true
     setAEnviar(true)
     setErro(null)
-    const codigo = await onConfirmar()
+    const falha = await onConfirmar() // null = correu bem; senão a resposta com o erro
     enviado.current = false
     setAEnviar(false)
-    if (codigo) setErro(codigo)
+    if (falha) setErro(falha)
   }
 
-  const contacto = erro === 'PHONE_BLOCKED' || erro === 'LIMIT_REACHED' || erro === 'RATE_LIMITED' || erro === 'REJECTED'
+  // Casos em que só o barbeiro resolve (2.1): mostra também o botão do WhatsApp.
+  const contacto = ['PHONE_BLOCKED', 'LIMIT_REACHED', 'RATE_LIMITED', 'REJECTED'].includes(erro?.error)
 
   return (
     <>
@@ -457,7 +482,7 @@ function PassoRevisao({ servico, dia, hora, dados, preco, whatsapp, onVoltar, on
 
       {erro && (
         <div role="alert" className="mt-5 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn">
-          {MENSAGENS[erro] ?? MENSAGENS.NETWORK}
+          {mensagemErro(erro)}
           {contacto && whatsapp && (
             <a href={whatsapp} target="_blank" rel="noreferrer" className="mt-2 flex items-center gap-1.5 font-semibold text-gold-2 underline">
               <MessageCircle size={14} strokeWidth={1.8} aria-hidden /> Falar com o barbeiro

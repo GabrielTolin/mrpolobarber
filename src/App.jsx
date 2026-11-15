@@ -5,6 +5,7 @@ import PublicLayout from './public/PublicLayout'
 import Inicio from './public/Inicio'
 import Marcar from './public/Marcar'
 import LinkPessoal from './public/LinkPessoal'
+import Privacidade from './public/Privacidade'
 import NaoEncontrado from './public/NaoEncontrado'
 
 // O painel é um bundle à parte (Arquitetura 3.1, decisão 1).
@@ -20,6 +21,7 @@ export default function App() {
         <Route index element={<Inicio />} />
         <Route path="marcar" element={<Marcar />} />
         <Route path="m/:token" element={<LinkPessoal />} />
+        <Route path="privacidade" element={<Privacidade />} />
         {DesignPreview && (
           <Route path="design" element={<Suspense fallback={<Carregando />}><DesignPreview /></Suspense>} />
         )}
