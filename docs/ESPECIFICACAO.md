@@ -361,6 +361,15 @@ Confirma as decisões já tomadas (1.2, 1.7 / RN-04 / RN-05 / RN-06, 2.1 e 2.6).
 
 **Efeito aceite (1.7):** a revisão deixa perceber se um número é habitual (o preço muda), mas nunca mostra nome nem outros dados.
 
+### Alteração de 2026-11-15 (decisão do Gabriel, P-01): "Visitante / 1.ª vez" ou "Tenho cadastro"
+Ao carregar em **Marcar horário** na página de entrada abre uma janela com duas opções:
+- **Visitante / 1.ª vez** → fluxo normal.
+- **Tenho cadastro** → o cliente escreve o telemóvel. Só são aceites números **habituais** registados pelo barbeiro (função pública `check_regular`, que diz só "habitual sim/não", com o limite de 30 pedidos/hora por IP). Se for habitual, o fluxo segue com o **telemóvel já preenchido e fixo**. Se não for: aviso "Este número não está registado como cliente habitual…" + **Continuar como visitante** (o número escrito segue preenchido) + falar com o barbeiro.
+
+**O que NÃO muda (regras 2, 3, 5–7):** a categoria continua a ser definida só pelo barbeiro e **o preço continua a ser decidido pelo servidor a partir do telemóvel**. Escolher "Tenho cadastro" com um número não habitual não dá preço habitual; um habitual que escolha "Visitante" por engano **paga o habitual** (o número manda). A revisão passa a indicar **"Preço de cliente habitual"** ou **"Preço de visitante"** debaixo do preço. Os cadastros iniciais são feitos pelo barbeiro (ficha do cliente → "Habitual").
+
+**Regra 8 (preços iniciais iguais) termina:** os preços de visitante passam a ser definidos **serviço a serviço** pelo barbeiro (P-01).
+
 ### Cálculo do preço (online)
 
 ```

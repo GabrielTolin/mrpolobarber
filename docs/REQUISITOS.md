@@ -158,7 +158,7 @@ Se dois clientes tentarem o mesmo horário ao mesmo tempo, só o primeiro fica c
 - Responsável pelo tratamento: `[NOME_RESPONSAVEL]`, NIF `[NIF]`, `[MORADA]`.
 - Recolha mínima: só os campos acima.
 - Aviso curto no formulário com link para a política de privacidade.
-- Prazo de conservação de clientes inativos: `[PRAZO]` (proposta: 2 anos).
+- Prazo de conservação de clientes inativos: **2 anos** sem marcações (decidido pelo Gabriel a 2026-11-15) → anonimização automática diária (8.1).
 
 ---
 

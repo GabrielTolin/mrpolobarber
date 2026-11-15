@@ -144,7 +144,7 @@ Texto das preferências atualizado ("Vale para todos os dispositivos com notific
 
 ---
 
-## 7.4 — Página Notificações 🔶 *(feita em 2026-11-15; à espera do teu teste no iPhone)*
+## 7.4 — Página Notificações ✅ *(testada pelo Gabriel no iPhone, 2026-11-15)*
 
 | Peça | Ficheiro | O que faz |
 |---|---|---|
@@ -157,3 +157,60 @@ Texto das preferências atualizado ("Vale para todos os dispositivos com notific
 **Verificado (2026-11-15, browser em tamanho de telemóvel, notificações simuladas):** lista agrupada (Hoje/Ontem) com 3 por ler · número **3** na navegação · tocar na "Nova marcação" → pedido só para essa (`id=in.(n1)`), ficam 2 · "Marcar todas como lidas" → "Tudo lido", sem número · aberto com `?n=` → lida e endereço limpo · contador e lista sempre iguais · lint e build OK.
 
 **Para o teu teste no iPhone (depois do push):** o ícone mostra **3** (as notificações de teste) → abrir Notificações → tocar numa → fica lida, o número passa a 2 → "Marcar todas como lidas" → o número desaparece do ícone. Enviar outra notificação de teste e **tocar no push** → abre o painel e essa já aparece lida.
+
+---
+
+## 7.5 — Lembrete de 5 minutos 🔶 *(ligado em 2026-11-15; à espera do teu teste real)*
+
+**Pedido do barbeiro:** aviso 5 minutos antes de cada cliente, nas marcações **online e nas feitas por ele**.
+
+- `settings`: `reminder_enabled = true`, `reminder_minutes = 5` (gravado a 2026-11-15; aparece em Configurações → Notificações e pode ser mudado lá, de 5 a 120 min).
+- Mantêm-se: nova marcação ✅ · cancelamento pelo cliente ✅ · resumo do dia ✅ às 08:00.
+- Texto: **"Próximo cliente — Daqui a 5 min: João, Barba"**; ao tocar abre a marcação na agenda.
+- Regras (testadas na 7.1): só marcações **confirmadas**, de **qualquer origem**; um aviso por marcação; não avisa uma marcação criada já dentro dos 5 min (o barbeiro acabou de a fazer).
+- Como a tarefa corre de minuto a minuto, o aviso chega entre **5 e 4 minutos** antes da hora.
+
+### Teste real (Gabriel, no iPhone)
+1. Painel → Agenda → **Nova marcação** para ti, com início **daqui a 10 minutos** (fora do horário → confirmar o aviso).
+2. Fechar a app e esperar: por volta dos **5 min antes** chega "Próximo cliente — Daqui a 5 min: …".
+3. Tocar no push → abre a marcação na agenda (já lida em Notificações).
+4. Depois, cancelar essa marcação no painel (o cancelamento do barbeiro não gera notificação).
+
+**Teste do Gabriel (2026-11-15):** ainda não feito — ao domingo a lista "Horários livres" do formulário fica vazia e pareceu não haver horário. Nota: no painel pode-se **escrever qualquer hora** no campo "Hora" (a lista é só sugestão); fora do horário aparece o aviso e confirma-se. Fica para **segunda 16/11 de manhã**. Confirmado no servidor: a tarefa `notifications_tick` corre a cada minuto sem erros; o push recebido às 15:37 era uma "Notificação de teste".
+
+---
+
+## 7.6 — Testes e validação 🔶 *(2026-11-15; faltam os 2 testes reais de segunda de manhã)*
+
+### Matriz de critérios
+✅ provado · 📱 teste real do Gabriel · ⏳ segunda 16/11 de manhã
+
+**2.9 — Notificações**
+| Critério | Estado | Prova |
+|---|---|---|
+| Marcação online gera notificação interna e push | ✅ | 7.1 T1 (interna) · 7.2/7.3 (push chega ao iPhone pela mesma cadeia) |
+| Cliente sinalizado → "⚠️" | ✅ | 7.1 T2: "· ⚠️ 1 falta" |
+| Cancelamento pelo cliente → interna e push | ✅ | 7.1 T4 |
+| Resumo do dia à hora configurada, **sem a app aberta** | ⏳ | Lógica ✅ (7.1 T7). Real: **segunda 16/11 às 08:00** deve chegar "Resumo do dia — Hoje: …" |
+| Ações do barbeiro **não** notificam, mas ficam no histórico | ✅ | 7.1 T3/T4 (0 notificações); histórico já provado na Etapa 5/6.7 |
+| Desligar um tipo → deixa de chegar | ✅ | 7.1 T5 e lembrete desligado → 0 |
+| Tocar numa notificação abre a marcação | ✅ 📱 | 7.4 (testado pelo Gabriel) |
+| Contador igual no Início, navegação e badge | ✅ 📱 | 7.4 (contador único; testado no iPhone) |
+| Com o push desativado, as notificações continuam na lista | ✅ | A notificação é criada antes e independentemente do envio (7.2: com 0 aparelhos a função responde e a notificação fica) |
+| **Lembrete 5 min antes** (pedido do barbeiro) | ⏳ | Lógica ✅ (7.1 T6). Real: segunda de manhã, marcação daqui a 10 min |
+
+**3.10 — Web Push**
+| Critério | Estado | Prova |
+|---|---|---|
+| "Ativar notificações" no iPhone (PWA) pede permissão e grava o aparelho | ✅ 📱 | 7.3: 1 aparelho (`web.push.apple.com`) |
+| Push chega com o PWA fechado | ✅ 📱 | 7.3: "Chegou" (3 envios, 0 falhas) |
+| Tocar no push abre a marcação certa | ✅ 📱 | 7.4 |
+| Badge mostra as não lidas e atualiza ao ler | ✅ 📱 | 7.4 |
+| Chave privada VAPID e `service_role` fora do site e do repositório | ✅ | Procura (2026-11-15): 0 ocorrências da chave privada e do segredo partilhado nos ficheiros do projeto e em **todo o histórico do Git**; no site publicado (~700 KB de código) 0 da chave privada, do segredo, de `service_role` e de `sb_secret_`; só a chave **pública** (esperado) |
+
+**Segurança (2026-11-15):** público continua só com as **8 funções públicas** · das funções novas, só `admin_send_test_notification` é executável com sessão (e verifica se é administrador); gatilhos, lembretes, resumo, limpeza e envio só correm no servidor · 0 funções privilegiadas sem `search_path` fixo · todas as tabelas com RLS · `send-push`: sem segredo → 401.
+
+### Testes reais de segunda-feira 16/11 de manhã (Gabriel)
+1. **08:00 — Resumo do dia** chega sozinho (app fechada): "Resumo do dia — Hoje: …". ✔ = critério 2.9 "resumo à hora configurada sem a app aberta".
+2. **Lembrete de 5 min:** Agenda → Nova marcação → escrever uma hora **10 min à frente** no campo "Hora" (a lista de horários livres é só sugestão) → gravar → fechar a app → por volta de 5 min antes chega "Próximo cliente — Daqui a 5 min: …" → tocar abre a marcação → cancelar a marcação de teste.
+3. Dizer-me o resultado: confirmo no servidor (notificação criada, hora do envio, resposta da Apple). Com estes dois ✅, a **Etapa 7 fecha**.

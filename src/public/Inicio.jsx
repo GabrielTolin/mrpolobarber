@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import Entrada from './ui/Entrada'
+import EscolhaCliente from './ui/EscolhaCliente'
 import { horarioEmLinhas, horarioResumo, obterInfo } from './publicApi'
 import { linkWhatsapp } from '../lib/telefone'
 
@@ -11,8 +11,8 @@ import { linkWhatsapp } from '../lib/telefone'
 // Configurações; se mudar, altera-se aqui (ou cria-se a coluna em settings).
 const INSTAGRAM = { handle: '@mathybarber', url: 'https://www.instagram.com/mathybarber/' }
 export default function Inicio() {
-  const navigate = useNavigate()
   const [info, setInfo] = useState(null)
+  const [escolher, setEscolher] = useState(false) // janela "Visitante / Tenho cadastro" (P-01)
 
   useEffect(() => {
     const vivo = { atual: true }
@@ -26,18 +26,23 @@ export default function Inicio() {
 
   const semanal = info?.weekly_hours ?? []
 
+  const whatsapp = info?.whatsapp_phone ? linkWhatsapp(info.whatsapp_phone, 'Olá! ') : null
+
   return (
+    <>
     <Entrada
       nome={info?.business_name ?? 'Mr. Polo Barber Shop'}
       barbeiro={info?.owner_name ?? 'Matheus'}
       morada={info?.address}
       mapa={info?.map_url}
-      whatsapp={info?.whatsapp_phone ? linkWhatsapp(info.whatsapp_phone, 'Olá! ') : null}
+      whatsapp={whatsapp}
       instagram={INSTAGRAM}
       foto="/hero-barbeiro.webp"
       horario={horarioEmLinhas(semanal)}
       resumoHorario={info ? horarioResumo(semanal) : ['…', '']}
-      onMarcar={() => navigate('/marcar')}
+      onMarcar={() => setEscolher(true)}
     />
+    {escolher && <EscolhaCliente whatsapp={whatsapp} onFechar={() => setEscolher(false)} />}
+    </>
   )
 }

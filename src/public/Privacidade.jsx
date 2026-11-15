@@ -109,8 +109,8 @@ export default function Privacidade() {
       <Seccao titulo="Durante quanto tempo">
         <ul className="list-disc pl-5">
           <li>
-            <b>Ficha de cliente e marcações:</b> enquanto for cliente. Se não fizer nenhuma marcação durante <Falta>PRAZO — proposta: 2 anos</Falta>,
-            o nome, o telemóvel e as notas são apagados; as marcações ficam sem dados que o identifiquem, só para estatística.
+            <b>Ficha de cliente e marcações:</b> enquanto for cliente. Se não fizer nenhuma marcação durante <b>2 anos</b>, o nome, o
+            telemóvel e as notas são apagados automaticamente; as marcações ficam sem dados que o identifiquem, só para estatística.
           </li>
           <li>
             <b>Registos de segurança</b> (contagem de pedidos): 24 horas.

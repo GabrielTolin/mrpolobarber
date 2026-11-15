@@ -56,6 +56,8 @@ export const criarMarcacao = ({ serviceId, inicio, nome, telefone, observacoes, 
   })
 
 export const verMarcacao = (codigo) => chamarAcao('get_booking', { p_code: codigo })
+// "Tenho cadastro" (P-01): diz só se o número é de um cliente HABITUAL registado pelo barbeiro.
+export const verificarHabitual = (telefone) => chamarAcao('check_regular', { p_phone: telefone })
 export const cancelarMarcacao = (codigo) => chamarAcao('cancel_booking', { p_code: codigo })
 
 // Mensagens ao cliente para cada código de erro (Arquitetura 3.6 §4, 3.7 §4;

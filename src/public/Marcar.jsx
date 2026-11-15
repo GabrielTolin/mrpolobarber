@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { CalendarPlus, Check, Copy, MessageCircle } from 'lucide-react'
 import Carregando from '../components/Carregando'
 import Passo from './ui/Passo'
@@ -25,14 +25,29 @@ const porExtenso = (dia) => dataPorExtenso(instanteLisboa(dia, '12:00'))
 // Telemóvel guardado (E.164) → como aparece no campo: "912 345 678" para PT, completo para os outros.
 const telefoneParaCampo = (e164) => (e164?.startsWith('+351') ? formatarTelefone(e164).replace('+351 ', '') : (e164 ?? ''))
 
-function dadosIniciais() {
+// telefoneCadastro: número já confirmado como habitual na janela "Tenho cadastro" (P-01).
+// telefoneSugerido: número escrito na janela que não estava registado (segue como visitante).
+function dadosIniciais(telefoneCadastro, telefoneSugerido) {
   const c = lerCliente()
-  return { nome: c?.nome ?? '', telefone: telefoneParaCampo(c?.telefone), observacoes: '', lembrar: true, armadilha: '' }
+  const numero = telefoneCadastro ?? telefoneSugerido
+  const mesmo = c && c.telefone === numero
+  return {
+    nome: !numero || mesmo ? (c?.nome ?? '') : '',
+    telefone: telefoneParaCampo(numero ?? c?.telefone),
+    observacoes: '',
+    lembrar: true,
+    armadilha: '',
+  }
 }
 
 export default function Marcar() {
   const [params, setParams] = useSearchParams()
   const pedido = Number(params.get('passo') ?? 1)
+  // Vindo da janela da página de entrada: "Tenho cadastro" traz o telemóvel já confirmado.
+  // Guarda-se no início, porque o estado da navegação perde-se ao mudar de passo.
+  const location = useLocation()
+  const [telefoneCadastro] = useState(() => (location.state?.cadastro ? location.state.telefone : null))
+  const [telefoneSugerido] = useState(() => (location.state?.cadastro === false ? (location.state.telefone ?? null) : null))
 
   const [info, setInfo] = useState(null)
   const [servicos, setServicos] = useState(null)
@@ -41,10 +56,11 @@ export default function Marcar() {
   const [servico, setServico] = useState(null)
   const [dia, setDia] = useState(null)
   const [hora, setHora] = useState(null) // { start_at, time_local }
-  const [dados, setDados] = useState(dadosIniciais)
+  const [dados, setDados] = useState(() => dadosIniciais(telefoneCadastro, telefoneSugerido))
   const [lembrado, setLembrado] = useState(() => lerCliente() != null)
   const [versaoMemoria, setVersaoMemoria] = useState(0) // muda ao esquecer, para o cartão das marcações desaparecer
   const [preco, setPreco] = useState(null)
+  const [precoHabitual, setPrecoHabitual] = useState(false)
   const [chave, setChave] = useState(null)
   const [resultado, setResultado] = useState(null)
   const [guardado, setGuardado] = useState(false) // a marcação ficou mesmo guardada no dispositivo?
@@ -82,7 +98,7 @@ export default function Marcar() {
   // "Não sou eu / esquecer os meus dados" (2.10 regra 9)
   const esquecer = () => {
     esquecerTudo()
-    setDados((d) => ({ ...d, nome: '', telefone: '' }))
+    setDados((d) => ({ ...d, nome: '', telefone: telefoneCadastro ? d.telefone : '' }))
     setLembrado(false)
     setVersaoMemoria((v) => v + 1)
   }
@@ -156,6 +172,7 @@ export default function Marcar() {
           dia={dia}
           hora={hora}
           dados={dados}
+          telefoneFixo={Boolean(telefoneCadastro)}
           lembrado={lembrado}
           onEsquecer={esquecer}
           onMudar={setDados}
@@ -164,6 +181,7 @@ export default function Marcar() {
             const resposta = await cotarPreco(servico.id, normalizarTelefone(dados.telefone))
             if (!resposta.ok) return resposta.error
             setPreco(resposta.price_cents)
+            setPrecoHabitual(Boolean(resposta.regular))
             setChave(crypto.randomUUID())
             setAviso(null)
             ir(5)
@@ -179,6 +197,7 @@ export default function Marcar() {
           hora={hora}
           dados={dados}
           preco={preco}
+          precoHabitual={precoHabitual}
           whatsapp={whatsapp}
           onVoltar={voltar}
           onConfirmar={async () => {
@@ -345,7 +364,7 @@ function PassoHora({ servico, dia, selecionada, onVoltar, onEscolher }) {
 }
 
 // ── Passo 4: dados ───────────────────────────────────────────────────────────
-function PassoDados({ servico, dia, hora, dados, lembrado, onEsquecer, onMudar, onVoltar, onContinuar }) {
+function PassoDados({ servico, dia, hora, dados, telefoneFixo, lembrado, onEsquecer, onMudar, onVoltar, onContinuar }) {
   const [erros, setErros] = useState({})
   const [erroGeral, setErroGeral] = useState(null)
   const [aEnviar, setAEnviar] = useState(false)
@@ -398,13 +417,23 @@ function PassoDados({ servico, dia, hora, dados, lembrado, onEsquecer, onMudar, 
             <input
               value={dados.telefone}
               onChange={mudar('telefone')}
+              readOnly={telefoneFixo}
               inputMode="tel"
               autoComplete="tel-national"
               placeholder="912 345 678"
-              className="field bg-bg/70"
+              className={`field bg-bg/70 ${telefoneFixo ? 'text-muted' : ''}`}
             />
           </div>
-          <span className="mt-1 block text-xs text-muted-2">Número estrangeiro? Escreva-o com o indicativo, ex.: +44…</span>
+          {telefoneFixo ? (
+            <span className="mt-1 block text-xs text-muted-2">
+              Número do seu cadastro. Não é o seu?{' '}
+              <Link to="/" className="text-gold-2 underline">
+                Voltar ao início
+              </Link>
+            </span>
+          ) : (
+            <span className="mt-1 block text-xs text-muted-2">Número estrangeiro? Escreva-o com o indicativo, ex.: +44…</span>
+          )}
           {erros.telefone && <span className="mt-1 block text-xs text-warn">{erros.telefone}</span>}
         </label>
 
@@ -451,7 +480,7 @@ function PassoDados({ servico, dia, hora, dados, lembrado, onEsquecer, onMudar, 
 }
 
 // ── Passo 5: revisão com o preço ─────────────────────────────────────────────
-function PassoRevisao({ servico, dia, hora, dados, preco, whatsapp, onVoltar, onConfirmar }) {
+function PassoRevisao({ servico, dia, hora, dados, preco, precoHabitual, whatsapp, onVoltar, onConfirmar }) {
   const [aEnviar, setAEnviar] = useState(false)
   const [erro, setErro] = useState(null)
   const enviado = useRef(false)
@@ -474,6 +503,9 @@ function PassoRevisao({ servico, dia, hora, dados, preco, whatsapp, onVoltar, on
     <>
       <Passo numero={5} titulo="Confirme a marcação" onVoltar={onVoltar} />
       <ResumoMarcacao servico={servico.name} dataTexto={porExtenso(dia)} hora={hora.time_local} duracao={servico.duration_minutes} precoCentimos={preco} destaque>
+        <p className={`-mt-2 text-right text-xs ${precoHabitual ? 'text-gold-2' : 'text-muted-2'}`}>
+          {precoHabitual ? 'Preço de cliente habitual' : 'Preço de visitante'}
+        </p>
         <p className="text-sm text-muted">
           {dados.nome.trim()} · {formatarTelefone(normalizarTelefone(dados.telefone))}
         </p>
