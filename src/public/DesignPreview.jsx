@@ -49,7 +49,7 @@ export default function DesignPreview() {
           whatsapp="#"
           resumoHorario={['Seg a Sáb', '09:00–19:00']}
           horario={[
-            ['Segunda a sexta', '09:00–13:00 · 14:00–19:00'],
+            ['Segunda a sexta', '09:00–12:00 · 14:00–19:00'],
             ['Sábado', '09:00–13:00'],
             ['Domingo', 'Fechado'],
           ]}

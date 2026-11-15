@@ -315,7 +315,7 @@ Como os clientes com histórico não se apagam, cumprir o prazo de conservação
 |---|---|---|---|
 | `id` | uuid | Obr. | |
 | `weekday` | smallint | Obr. | → `weekly_hours` |
-| `start_time` · `end_time` | time | Obr. | Ex.: 13:00–14:00 |
+| `start_time` · `end_time` | time | Obr. | Ex.: 12:00–14:00 |
 | `label` | text | *Opc.* | Ex.: "Almoço" |
 
 ### 5. `day_overrides`

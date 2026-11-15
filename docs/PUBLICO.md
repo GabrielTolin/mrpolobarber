@@ -183,3 +183,46 @@ Segue a Especificação 2.10 (regras 6–10) e a Arquitetura 3.9 §2. **Nada dis
 - **Já está previsto** (Especificação 2.9, Arquitetura 3.8 §2 "Lembrete"): a definição existe no painel, em Configurações → Notificações → "Lembrete antes de cada marcação" (de 5 a 120 minutos; desligado por defeito, 15 min).
 - **Falta o envio**, que é da **etapa das notificações**: tarefa `reminders` (cron a cada minuto) → notificação → push para o telemóvel (Edge Function `send-push`, Web Push). No iPhone, o push só funciona com o painel **instalado no ecrã principal** (PWA) e com as notificações autorizadas.
 - Quando essa etapa estiver feita: ligar o lembrete e pôr **5 minutos**.
+
+---
+
+## 6.4 — Link pessoal `/m/:código` 🔶 *(implementado em 2026-11-15; à espera do teu teste)*
+
+`src/public/LinkPessoal.jsx` (ecrã 7 aprovado na 6.0). Usa só `get_booking` e `cancel_booking` (6.1).
+
+| Situação | O que o cliente vê |
+|---|---|
+| **Confirmada, dentro do prazo** | "Olá, João" · resumo (cartão dourado) · **Confirmada** · **Cancelar marcação** · "Pode cancelar até quarta, 18/11, às 08:00." · Falar com o barbeiro · "Marcar outro horário" |
+| Ao carregar em Cancelar | Confirmação: "Cancelar esta marcação? O horário fica livre para outra pessoa. Não é possível desfazer." · **Manter** / **Sim, cancelar** |
+| **Confirmada, a menos de 2 h** | Sem botão de cancelar · "Já não é possível cancelar online (faltam menos de 2 horas). Se não puder vir, avise o barbeiro." · WhatsApp |
+| **Cancelada** (pelo cliente / **pelo barbeiro**) | Estado a vermelho · **Marcar novo horário** |
+| Em curso · Concluída · Falta | Estado correspondente (calculado pela hora, 3.8) |
+| **Código inventado ou incompleto** | "Link não encontrado — Confirme se o copiou inteiro." · Marcar horário |
+| Demasiados pedidos / sem rede | Mensagem correspondente |
+
+- Se o prazo passar enquanto a página está aberta, o servidor recusa (`TOO_LATE_TO_CANCEL`) e a página mostra o estado atualizado.
+- O código não sai para outros sites: a Vercel já envia `Referrer-Policy: strict-origin-when-cross-origin`, e os links externos têm `rel="noreferrer"`.
+- "Falar com o barbeiro" leva uma mensagem pronta ("É sobre a minha marcação de Barba para qua., 18/11 às 10:00") e só aparece com o WhatsApp nas Configurações (P-02).
+
+**Verificado (2026-11-15, telemóvel):** código inventado → "Link não encontrado" (resposta real do servidor). Com respostas **simuladas no browser** (sem tocar na base de dados): confirmada com botão e prazo · confirmação → cancelada + "Marcar novo horário" · dentro das 2 h → aviso sem botão · cancelada pelo barbeiro → "Cancelada pelo barbeiro". Consola sem erros.
+
+**Fica para o teu teste:** abrir o link de uma marcação real (pelo ecrã de sucesso ou pelo "Ver →" do cartão no passo 1) e cancelá-la; confirmar no painel que fica **cancelada pelo cliente** e que o horário volta a aparecer livre.
+
+---
+
+## Alteração de horário (2026-11-15, pedido do barbeiro)
+
+**Segunda a sexta: 09:00–12:00 · almoço 12:00–14:00 · 14:00–19:00** (o almoço era 13:00–14:00).
+
+- **Base de dados:** migration `20261115120000_almoco_12h.sql` (só as pausas "Almoço" 13:00–14:00 de seg–sex). O painel (Horários) e a área pública leem daqui, por isso mudam sozinhos. **Aplicada a 2026-11-15** com o OK do Gabriel e confirmada (seg–sex 12:00–14:00); a página de entrada já mostra 09:00–12:00 · 14:00–19:00.
+- **Código:** nova pausa no painel sugere 12:00–14:00 (`HorarioSemanal.jsx`) · exemplo da pré-visualização `/design` e comentário em `publicApi.js`.
+- **Documentos:** REQUISITOS (§5), ESPECIFICAÇÃO (2.4 exemplos recalculados e 2.12 valores iniciais), ARQUITETURA (exemplo de coluna).
+- **Sábado** (09:00–13:00) e **domingo** (fechado) **não mudaram** — a confirmar com o Gabriel.
+- Marcações futuras afetadas: **nenhuma** (a única é 18/11 às 10:00).
+
+### Instagram e localização (2026-11-15)
+- **Localização:** gravada nas Configurações (`settings.map_url` = `https://maps.app.goo.gl/eAQQyidVFEzDUZq7A`, sem o parâmetro de rastreio da partilha). O barbeiro pode mudá-la no painel (Configurações → Barbearia).
+- **Instagram:** `@mathybarber` → `https://www.instagram.com/mathybarber/` (sem o parâmetro de rastreio). Fica em `src/public/Inicio.jsx` (`INSTAGRAM`); não há ainda campo nas Configurações.
+- **Botões clicáveis** (pedido do Gabriel): no topo, por baixo de "Marcar horário", **Como chegar** (Google Maps) e **Instagram** lado a lado; no fundo, **Ver no mapa**, **@mathybarber** e (quando houver) **WhatsApp**; mantém-se o ícone do Instagram ao lado do "Marcar" na barra do topo. Tudo abre numa janela nova. Verificado a 375 px (o topo continua a caber no primeiro ecrã) e a 1440 px; consola sem erros.
+- **Ainda em falta (P-02):** morada escrita e WhatsApp nas Configurações; nome da barbearia ainda "MR Polo Barber".
+- **Texto do topo (2026-11-15, escolha do Gabriel):** título **"Mr. Polo Barber Shop"** (era "O seu estilo, feito ao detalhe.") e por baixo só **"Marque online em 1 minuto e fica confirmado na hora."** (saiu "Corte, barba e cuidado masculino com o Matheus."). Linhas equilibradas no telemóvel.

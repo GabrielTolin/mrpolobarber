@@ -165,7 +165,7 @@ export default function HorarioSemanal() {
                 ))}
                 <button
                   type="button"
-                  onClick={() => alterar(d.weekday, { pausas: [...d.pausas, { inicio: '13:00', fim: '14:00', label: 'Almoço' }] })}
+                  onClick={() => alterar(d.weekday, { pausas: [...d.pausas, { inicio: '12:00', fim: '14:00', label: 'Almoço' }] })}
                   className="flex w-fit items-center gap-1 text-[13px] text-gold-2 hover:underline"
                 >
                   <Plus size={14} strokeWidth={1.8} aria-hidden /> Adicionar pausa

@@ -93,7 +93,7 @@ Preços **fixos**, editáveis no painel. Preço de visitante igual ao habitual a
 
 | Dia | Abertura | Fecho | Pausa |
 |---|---|---|---|
-| Segunda a sexta | 09:00 | 19:00 | Almoço 13:00–14:00 |
+| Segunda a sexta | 09:00 | 19:00 | Almoço 12:00–14:00 *(alterado a 2026-11-15, pedido do barbeiro; antes 13:00–14:00)* |
 | Sábado | 09:00 | 13:00 | — |
 | Domingo | Fechado | | |
 

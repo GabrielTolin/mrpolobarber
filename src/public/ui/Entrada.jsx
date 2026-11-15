@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, CalendarCheck, Clock, MapPin, MessageCircle, Scissors } from 'lucide-react'
+import { CalendarCheck, Clock, MapPin, MessageCircle, Scissors } from 'lucide-react'
 
 const ICONE = { size: 16, strokeWidth: 1.8, 'aria-hidden': true }
 const BRILHO = { textShadow: '0 0 36px rgba(227, 185, 85, 0.45)' }
+const BOTAO_ATALHO = 'btn-ghost flex items-center justify-center gap-2 bg-black/50 py-3 text-[14px] backdrop-blur'
 
 // Ícone do Instagram desenhado à mão (o lucide já não traz ícones de marcas).
 function IconeInstagram({ size = 16, className = '' }) {
@@ -84,23 +85,33 @@ export default function Entrada({ nome, barbeiro, morada, mapa, whatsapp, instag
             </span>
 
             <h1 style={BRILHO} className={`mt-4 text-[44px] leading-[0.98] font-extrabold tracking-tight text-gold ${foto ? 'lg:text-[72px] xl:text-[84px]' : 'lg:text-[92px]'}`}>
-              O seu estilo,
+              Mr. Polo
               <br />
-              feito ao detalhe.
+              Barber Shop
             </h1>
 
-            <p className="mt-4 max-w-[440px] text-[15px] leading-relaxed text-fg/75 lg:max-w-[520px] lg:text-[17px]">
-              Corte, barba e cuidado masculino com o {barbeiro}. Marque online em 1 minuto e fica confirmado na hora.
+            <p className="mt-4 max-w-[440px] text-balance text-[15px] leading-relaxed text-fg/75 lg:max-w-[520px] lg:text-[17px]">
+              Marque online em 1 minuto e fica confirmado na hora.
             </p>
 
-            <div className="mt-6 flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-5">
-              <button type="button" onClick={onMarcar} className="btn-primary py-4 text-[15px] shadow-[0_0_32px_rgba(227,185,85,0.35)] sm:px-10">
+            <div className="mt-6 flex flex-col gap-2.5 lg:max-w-[480px]">
+              <button type="button" onClick={onMarcar} className="btn-primary py-4 text-[15px] shadow-[0_0_32px_rgba(227,185,85,0.35)]">
                 Marcar horário
               </button>
-              {mapa && (
-                <a href={mapa} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 py-3 text-[15px] text-fg/85 hover:text-fg">
-                  Como chegar <ArrowRight size={16} strokeWidth={1.8} aria-hidden />
-                </a>
+              {/* Atalhos diretos: abrem o Google Maps e o Instagram */}
+              {(mapa || instagram) && (
+                <div className={`grid gap-2.5 ${mapa && instagram ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                  {mapa && (
+                    <a href={mapa} target="_blank" rel="noreferrer" className={BOTAO_ATALHO}>
+                      <MapPin {...ICONE} className="text-gold" /> Como chegar
+                    </a>
+                  )}
+                  {instagram && (
+                    <a href={instagram.url} target="_blank" rel="noreferrer" className={BOTAO_ATALHO}>
+                      <IconeInstagram size={16} className="text-gold" /> Instagram
+                    </a>
+                  )}
+                </div>
               )}
             </div>
 
@@ -145,23 +156,23 @@ export default function Entrada({ nome, barbeiro, morada, mapa, whatsapp, instag
             </p>
             <p className="mt-3 text-lg font-bold">{nome}</p>
             {morada && <p className="mt-1 text-sm text-muted">{morada}</p>}
-            <div className="mt-5 flex gap-2.5">
+            <div className="mt-5 grid grid-cols-2 gap-2.5 lg:flex lg:flex-wrap">
               {mapa && (
-                <a href={mapa} target="_blank" rel="noreferrer" className="btn-ghost flex flex-1 items-center justify-center gap-2 lg:flex-none lg:px-6">
+                <a href={mapa} target="_blank" rel="noreferrer" className="btn-ghost flex items-center justify-center gap-2 lg:px-6">
                   <MapPin {...ICONE} /> Ver no mapa
                 </a>
               )}
+              {instagram && (
+                <a href={instagram.url} target="_blank" rel="noreferrer" className="btn-ghost flex items-center justify-center gap-2 lg:px-6">
+                  <IconeInstagram size={16} /> {instagram.handle}
+                </a>
+              )}
               {whatsapp && (
-                <a href={whatsapp} target="_blank" rel="noreferrer" className="btn-ghost flex flex-1 items-center justify-center gap-2 lg:flex-none lg:px-6">
+                <a href={whatsapp} target="_blank" rel="noreferrer" className="btn-ghost flex items-center justify-center gap-2 lg:px-6">
                   <MessageCircle {...ICONE} /> WhatsApp
                 </a>
               )}
             </div>
-            {instagram && (
-              <a href={instagram.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm text-fg/85 hover:text-gold">
-                <IconeInstagram size={16} className="text-gold" /> {instagram.handle}
-              </a>
-            )}
           </div>
         </div>
         <div className="mx-auto max-w-[1200px] border-t border-line-sidebar px-5 py-4 text-xs text-muted-2 lg:px-10">

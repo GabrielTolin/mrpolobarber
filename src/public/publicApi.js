@@ -56,6 +56,7 @@ export const criarMarcacao = ({ serviceId, inicio, nome, telefone, observacoes, 
   })
 
 export const verMarcacao = (codigo) => chamarAcao('get_booking', { p_code: codigo })
+export const cancelarMarcacao = (codigo) => chamarAcao('cancel_booking', { p_code: codigo })
 
 // Mensagens ao cliente para cada código de erro (Arquitetura 3.6 §4, 3.7 §4).
 export const MENSAGENS = {
@@ -71,6 +72,9 @@ export const MENSAGENS = {
   REJECTED: 'Não foi possível concluir a marcação. Contacte o barbeiro.',
   INVALID_REQUEST: 'Não foi possível concluir a marcação. Tente de novo.',
   NETWORK: 'Sem ligação. Verifique a internet e tente de novo.',
+  NOT_FOUND: 'Este link não corresponde a nenhuma marcação. Confirme se o copiou inteiro.',
+  TOO_LATE_TO_CANCEL: 'Já não é possível cancelar online. Contacte o barbeiro.',
+  ALREADY_CANCELLED: 'Esta marcação já estava cancelada.',
 }
 
 // ── Horário semanal (public_info.weekly_hours) em texto ──────────────────────
@@ -90,7 +94,7 @@ function textoDoDia(d) {
 
 const NOMES_CURTOS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
-// Agrupa dias seguidos com o mesmo horário: [['Segunda a sexta', '09:00–13:00 · 14:00–19:00'], …]
+// Agrupa dias seguidos com o mesmo horário: [['Segunda a sexta', '09:00–12:00 · 14:00–19:00'], …]
 export function horarioEmLinhas(weeklyHours = []) {
   const dias = [...weeklyHours].sort((a, b) => a.weekday - b.weekday)
   const linhas = []

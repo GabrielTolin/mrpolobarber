@@ -215,7 +215,7 @@ Um só estado `cancelled`, mas com o detalhe necessário para o histórico do cl
 
 1. **O dia é elegível?** Está entre hoje e hoje + 30 dias; não é domingo nem dia fechado; não é feriado; não está bloqueado o dia inteiro. Hoje só se "marcar no próprio dia" estiver ligado.
 2. **Janelas de trabalho do dia:** horário excecional do dia, se existir, senão o horário semanal, **menos** a pausa de almoço.
-   - Ex.: terça → 09:00–13:00 e 14:00–19:00.
+   - Ex.: terça → 09:00–12:00 e 14:00–19:00 (almoço 12:00–14:00 desde 2026-11-15).
 3. **Ocupações do dia:** marcações `confirmed` e `in_progress` (incluindo sobreposições manuais) e bloqueios, alargados pelo intervalo entre marcações (0 min).
    - `cancelled`, `no_show` e `completed` passadas não ocupam.
 4. **Janelas livres** = janelas de trabalho menos ocupações.
@@ -228,11 +228,11 @@ Um só estado `cancelled`, mas com o detalhe necessário para o histórico do cl
 ### Exemplos (com os serviços reais)
 
 **Terça vazia, Corte na tesoura (50 min)**
-- Manhã: 09:00, 09:15, … , **12:00** (12:00 + 50 = 12:50 ≤ 13:00; 12:15 terminaria às 13:05, por isso não aparece).
+- Manhã: 09:00, 09:15, … , **11:00** (11:00 + 50 = 11:50 ≤ 12:00; 11:15 terminaria às 12:05, por isso não aparece).
 - Tarde: 14:00, 14:15, … , **18:00** (18:15 terminaria às 19:05).
 
 **Terça com uma marcação das 09:00 às 09:35 (Corte com máquina), cliente quer Barba (25 min)**
-- Janela livre 09:35–13:00 → **09:35** (encaixe), 09:45, 10:00, 10:15, …, **12:30** (12:30 + 25 = 12:55; 12:45 terminaria às 13:10).
+- Janela livre 09:35–12:00 → **09:35** (encaixe), 09:45, 10:00, 10:15, …, **11:30** (11:30 + 25 = 11:55; 11:45 terminaria às 12:10).
 
 **Sábado, marcação 11:00–11:45 (Cabelo e barba), cliente quer Corte de criança (35 min)**
 - Janela 09:00–11:00 → 09:00 … **10:15** (10:15 + 35 = 10:50; 10:30 terminaria às 11:05).
@@ -579,7 +579,7 @@ Sem contradições. Consolida a 1.3, a 1.8, a 2.2 e a 2.4 numa só área do pain
 |---|---|---|
 | **Dias de trabalho** | Liga/desliga cada dia da semana | Seg–Sáb ligados, Dom desligado |
 | **Abertura e fecho** | Por dia da semana | Seg–Sex 09:00–19:00 · Sáb 09:00–13:00 |
-| **Pausas** | Uma ou mais por dia (início–fim) | Seg–Sex 13:00–14:00 (almoço) |
+| **Pausas** | Uma ou mais por dia (início–fim) | Seg–Sex 12:00–14:00 (almoço; era 13:00–14:00 até 2026-11-15) |
 | **Horário excecional** | Para uma data concreta: outro horário, ou fechado. Substitui o semanal só nesse dia (2.2) | — |
 | **Folgas** | Um dia inteiro sem marcações (bloqueio de dia) | — |
 | **Férias / ausências** | Intervalo de datas (de … a …) sem marcações, com motivo opcional | — |

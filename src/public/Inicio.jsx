@@ -7,8 +7,9 @@ import { linkWhatsapp } from '../lib/telefone'
 // Página de entrada (/) com os dados reais da barbearia (public_info, 6.1).
 // Se a leitura falhar, a página aparece na mesma, sem horário nem contactos.
 
-// PROVISÓRIO: Instagram do barbeiro (o Gabriel confirma o perfil; depois passa para as Configurações).
-const INSTAGRAM = { handle: '@[instagram]', url: 'https://www.instagram.com/' }
+// Instagram do barbeiro (dado pelo Gabriel a 2026-11-15). Ainda não há campo nas
+// Configurações; se mudar, altera-se aqui (ou cria-se a coluna em settings).
+const INSTAGRAM = { handle: '@mathybarber', url: 'https://www.instagram.com/mathybarber/' }
 export default function Inicio() {
   const navigate = useNavigate()
   const [info, setInfo] = useState(null)
