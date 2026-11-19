@@ -1,6 +1,6 @@
 # MR Polo Barber — Notificações
 
-**Etapa 7 — Notificações ao barbeiro** · Em curso desde 2026-11-15 (plano e as 4 decisões validados pelo Gabriel)
+**Etapa 7 — Notificações ao barbeiro** · ✅ **Concluída e validada a 2026-11-16** (iniciada a 2026-11-15)
 
 O barbeiro passa a ser avisado no telemóvel, **mesmo com a app fechada**, do que não foi ele a fazer. Segue a [Especificação](ESPECIFICACAO.md) 2.9 e a [Arquitetura](ARQUITETURA.md) 3.8 (§2–4) e 3.10 (§1).
 
@@ -160,7 +160,7 @@ Texto das preferências atualizado ("Vale para todos os dispositivos com notific
 
 ---
 
-## 7.5 — Lembrete de 5 minutos 🔶 *(ligado em 2026-11-15; à espera do teu teste real)*
+## 7.5 — Lembrete de 5 minutos ✅ *(testado pelo Gabriel no iPhone, 2026-11-16)*
 
 **Pedido do barbeiro:** aviso 5 minutos antes de cada cliente, nas marcações **online e nas feitas por ele**.
 
@@ -180,7 +180,7 @@ Texto das preferências atualizado ("Vale para todos os dispositivos com notific
 
 ---
 
-## 7.6 — Testes e validação 🔶 *(2026-11-15; faltam os 2 testes reais de segunda de manhã)*
+## 7.6 — Testes e validação ✅ *(concluída 2026-11-16)*
 
 ### Matriz de critérios
 ✅ provado · 📱 teste real do Gabriel · ⏳ segunda 16/11 de manhã
@@ -214,3 +214,15 @@ Texto das preferências atualizado ("Vale para todos os dispositivos com notific
 1. **08:00 — Resumo do dia** chega sozinho (app fechada): "Resumo do dia — Hoje: …". ✔ = critério 2.9 "resumo à hora configurada sem a app aberta".
 2. **Lembrete de 5 min:** Agenda → Nova marcação → escrever uma hora **10 min à frente** no campo "Hora" (a lista de horários livres é só sugestão) → gravar → fechar a app → por volta de 5 min antes chega "Próximo cliente — Daqui a 5 min: …" → tocar abre a marcação → cancelar a marcação de teste.
 3. Dizer-me o resultado: confirmo no servidor (notificação criada, hora do envio, resposta da Apple). Com estes dois ✅, a **Etapa 7 fecha**.
+
+### Testes reais de segunda 16/11 ✅ (Gabriel, iPhone; confirmados no servidor)
+| Teste | Resultado no servidor |
+|---|---|
+| **Resumo do dia às 08:00**, app fechada | Criado 08:00:00, enviado 08:00:08 — "Hoje ainda não há marcações." |
+| **Lembrete 5 min** (marcação manual WhatsApp às 09:45) | Criado 09:40:00, enviado 09:40:04 — "Daqui a 5 min: Gabriel Tolin, Cabelo e barba" |
+
+Com isto, todos os critérios da 2.9 e da 3.10 estão ✅.
+
+---
+
+✅ **ETAPA 7 FECHADA (2026-11-16).** "Etapa pode fechar" (Gabriel).

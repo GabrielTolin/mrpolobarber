@@ -17,7 +17,7 @@ O sistema está feito (painel, área pública, notificações). Esta etapa põe-
 | Conta do Matheus como administrador, no lugar da conta de teste do Gabriel | G-3 | Gabriel cria a conta |
 | Procedimento escrito para repor a palavra-passe (`docs/OPERACAO.md`, prometido na 3.9) | 3.9 | — |
 | Apagar as marcações, clientes e notificações de teste | 6, 7 | — |
-| Foto principal em maior resolução (opcional) | 6.0 | Matheus |
+| ~~Foto principal em maior resolução~~ ✅ 2026-11-19: `public/hero-matheus.webp` (896×1200, foto dada pelo Gabriel; substitui `hero-barbeiro.webp`) | 6.0 | Gabriel |
 
 ## Subetapas propostas
 
@@ -52,21 +52,86 @@ Decisão do Gabriel registada na [Especificação 2.7](ESPECIFICACAO.md) ("Alter
 
 ---
 
-## 8.0 — Dados da barbearia 🔶 *(no painel, pelo Matheus/Gabriel)*
+## Cortes clicáveis na marcação ✅ *(2026-11-19)*
+
+Foi um pedido do Gabriel. No passo 4 ("Os seus dados"), por cima das Observações, aparece **"Que corte quer? (opcional)"** com 20 cartões:
+Buzz Cut, Low Fade, Mid Fade, High Fade, Skin Fade, Taper Fade, Low Taper, Mid Taper, Burst Fade, Drop Fade, French Crop, Textured Crop, Mullet, Burst Mullet, Modern Mullet, Edgar Cut, Fluffy Hair, Slick Back, Side Part, Pompadour.
+
+- **Como funciona:** um toque escolhe o corte e outro toque tira-o. Podem escolher-se **até 3**; os outros cartões ficam apagados. Se não escolher nenhum, a marcação segue normal.
+- **O que o barbeiro recebe:** os cortes juntam-se às observações numa só nota (`client_notes`), por exemplo "Corte: Mid Fade, French Crop · é para o meu filho". A nota aparece na revisão (passo 5) e no detalhe da marcação no painel. A notificação push de marcação nova não mostra as observações.
+- **Limite:** o máximo de 200 caracteres conta com a nota toda. A base de dados não mudou.
+- **Onde está no código:** `src/public/Marcar.jsx` (`CORTES`, `MAX_CORTES`, `notaFinal`).
+- **Verificado no browser, a 375 px, até ao passo 5 (sem confirmar a marcação):**
+  - escolher e tirar funcionam;
+  - com 3 escolhidos, os outros 17 ficam desligados;
+  - a revisão mostra a nota junta;
+  - nada sai do ecrã;
+  - o build está OK.
+
+---
+
+## 8.3 — Limpeza dos dados de teste ✅ *(2026-11-19)*
+
+- **Cópia de segurança antes de mexer:** um JSON por tabela e a lista de contas, em `Desktop\mrpolobarber-backups\2026-11-19_antes-limpeza-8.3\`, fora do repositório.
+- **Apagado:** tudo era do Gabriel. O SQL foi mostrado antes e o Gabriel deu o OK. Foi tudo num só passo, com uma verificação no fim que desfazia tudo se algo falhasse:
+  - 5 marcações, com os 5 serviços e os 12 registos do histórico;
+  - 1 cliente;
+  - 9 notificações;
+  - 10 registos anti-abuso;
+  - as contas `gabrieltolin@…` e `tolinsgabriel@…`.
+- **As proteções do histórico** (`appointment_events_append_only` e `appointments_no_delete`) só estiveram desligadas dentro dessa transação.
+- **Verificado depois:**
+  - marcações, histórico, clientes e notificações a 0;
+  - só existe a conta `mathybarber01@gmail.com`, que é a administradora;
+  - as proteções estão ligadas;
+  - mantiveram-se os 5 serviços, os 75 feriados, os 7 dias de horário e as configurações ("Mr. Polo Barber Shop").
+
+---
+
+## 8.2 — Conta do Matheus ✅ *(2026-11-19)*
+
+- **Conta do Matheus:** o Gabriel criou-a no painel da Supabase (`mathybarber01@gmail.com`, email confirmado). A palavra-passe não está registada em lado nenhum do projeto.
+- **Troca do administrador:** feita num só passo, com o SQL mostrado antes e o OK do Gabriel. Saiu o Gabriel e entrou o Matheus; foram apagados os 2 aparelhos de push do Gabriel.
+- **Verificação:** fica 1 administrador (`mathybarber01@gmail.com`) e 0 aparelhos de push.
+- **Guia de operação:** [OPERACAO.md](OPERACAO.md) explica como repor a palavra-passe, trocar o administrador, o que fazer se algo falhar e quais são as tarefas automáticas.
+- **Contas do Gabriel:** apagadas na 8.3, depois da limpeza dos dados de teste.
+
+---
+
+## 8.0 — Dados da barbearia 🔶 *(nome, morada e WhatsApp gravados a 2026-11-19)*
+
+**2026-11-19.** O Gabriel deu os dados e pediu para os gravar. Ficou feito o seguinte:
+- **Gravado em `settings`:**
+  - nome: "Mr. Polo Barber Shop";
+  - morada: "R. Vasco da Gama, Edifício Calipto, Loja 1D, 8200-294 Albufeira";
+  - WhatsApp: +351 932 798 223.
+- **Link do mapa:** confirmado; aponta para "Mr.Polo Barbershop" na mesma rua. No Google a loja aparece como "Loja 1 C", mas a certa é a **1D**: confirmado pelo Gabriel a 2026-11-19. Fica gravada a 1D.
+- **Instagram:** `@mathybarber` já estava certo, fixo em `Inicio.jsx`.
+- **Página inicial:** os atalhos do topo passaram a ser **Mapa · Instagram · WhatsApp**, em três colunas. Antes só lá estavam o Mapa e o Instagram; o bloco "Onde estamos" já tinha os três.
+- **Resto das páginas:** o marcar, o ecrã final, o link pessoal, o "não encontrado" e a privacidade já liam os dados das Configurações e ficaram completos sem mexer no código.
+- **Nome antigo trocado onde estava escrito à mão:**
+  - título e descrição da página;
+  - nome da app instalada ("Mr. Polo Barber Shop — Painel" e, no ícone, "Mr. Polo");
+  - título por omissão das notificações e o nome por omissão no ecrã final;
+  - texto de ajuda das notificações bloqueadas.
+- **Verificação:**
+  - no browser, a 375 px: links certos e sem nada a sair do ecrã;
+  - a `/privacidade` ficou sem marcadores;
+  - o build está OK.
 
 Tudo isto se faz em **Configurações → Barbearia** (e Horários), sem programação:
 | O quê | Onde | Estado |
 |---|---|---|
-| Nome: **Mr. Polo Barber Shop** (hoje "MR Polo Barber" — aparece no rodapé, no calendário `.ics` e na privacidade) | Configurações → Barbearia | ⏳ |
-| Morada escrita | Configurações → Barbearia | ⏳ |
-| WhatsApp do barbeiro (faz aparecer os botões "Falar com o barbeiro") | Configurações → Barbearia | ⏳ |
+| Nome: **Mr. Polo Barber Shop** | Configurações → Barbearia | ✅ 2026-11-19 |
+| Morada escrita | Configurações → Barbearia | ✅ 2026-11-19 (Loja 1D confirmada) |
+| WhatsApp do barbeiro (faz aparecer os botões "Falar com o barbeiro") | Configurações → Barbearia | ✅ 2026-11-19 |
 | Link do mapa | Configurações → Barbearia | ✅ (gravado a 2026-11-15) |
 | Sábado (hoje 09:00–13:00) e Carnaval | Horários | ⏳ confirmar |
 | Preços de visitante · clientes "Habitual" | Serviços e preços · Clientes | ⏳ (Matheus) |
 
 ---
 
-## 8.1 — RGPD 🔶 *(anonimização feita em 2026-11-15; faltam os dados do responsável)*
+## 8.1 — RGPD ✅ *(anonimização 2026-11-15; política simplificada 2026-11-16 — completa-se com a 8.0)*
 
 **Prazo de conservação: 2 anos sem marcações** (decisão do Gabriel, 2026-11-15).
 
@@ -79,4 +144,13 @@ Migration `20261115200000_anonymize_inactive.sql` (SQL mostrado e aprovado antes
 
 **Política de privacidade:** o prazo passou a "**2 anos**" (marcador retirado).
 
-**Ainda faltam (P-03):** nome do responsável · NIF · morada · contacto para privacidade · data da política. Quando chegarem, preencho os marcadores de `/privacidade`.
+**Simplificação (decisão do Gabriel, 2026-11-16):** a política deixa de ter dados escritos à mão. Em "Quem é o responsável", `/privacidade` lê das **Configurações → Barbearia** (`public_info`):
+- o nome do negócio, que é o responsável;
+- a morada;
+- o WhatsApp, que é o contacto, mais "pessoalmente na barbearia".
+
+**Tirados:** o NIF (não é obrigatório na informação ao cliente) e o marcador da data (data da política: **16 de novembro de 2026**).
+
+Enquanto a morada ou o WhatsApp estiverem vazios no painel, aparece o marcador "[MORADA / WHATSAPP (Configurações → Barbearia)]". Foi verificado no browser com os dados reais: hoje mostra os dois marcadores e o nome "MR Polo Barber". O build está OK.
+
+**Falta:** só a **8.0**. Quando o nome ("Mr. Polo Barber Shop"), a morada e o WhatsApp estiverem gravados no painel, a política fica completa sem mais alterações. Se a barbearia for uma empresa, o "Nome" nas Configurações deve ser o nome da empresa (ou é preciso acrescentá-lo à política). Antes do lançamento, convém alguém do negócio rever o texto.

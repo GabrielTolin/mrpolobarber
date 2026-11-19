@@ -70,7 +70,10 @@ export default function VistaDia({ data, periodo, agora, onAbrir, onNova }) {
                   <span className="text-[15px] font-semibold tabular-nums">{partesLisboa(m.start_at).hora}</span>
                   <span className={`h-2 w-2 rounded-full ${COR_PONTO[estado]}`} />
                   <span className="min-w-0">
-                    <span className="block truncate text-[15px] font-semibold">{m.client_name}</span>
+                    <span className="block truncate text-[15px] font-semibold">
+                      {m.client_name}
+                      {m.source === 'weekly' && <span className="ml-1.5" title="Marcação semanal">🔁</span>}
+                    </span>
                     <span className="block truncate text-[13px] text-muted">
                       {m.appointment_services.map((s) => s.service_name).join(' + ')} · {m.total_duration_minutes} min
                       {m.is_intentional_overlap && !apagada ? ' · sobreposição' : ''}

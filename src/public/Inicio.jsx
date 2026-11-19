@@ -37,7 +37,7 @@ export default function Inicio() {
       mapa={info?.map_url}
       whatsapp={whatsapp}
       instagram={INSTAGRAM}
-      foto="/hero-barbeiro.webp"
+      foto="/hero-matheus.webp"
       horario={horarioEmLinhas(semanal)}
       resumoHorario={info ? horarioResumo(semanal) : ['…', '']}
       onMarcar={() => setEscolher(true)}

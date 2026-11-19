@@ -28,7 +28,7 @@ export default function Entrada({ nome, barbeiro, morada, mapa, whatsapp, instag
       <section className="relative isolate flex min-h-svh flex-col overflow-hidden">
         {/* Fundo: foto do barbeiro (quando houver) ou luz quente + logótipo.
             Com foto: no telemóvel ocupa o ecrã todo; no ecrã grande fica num quadro à
-            direita (a foto tem 640 px — esticada a toda a largura ficaria desfocada). */}
+            direita (a foto tem 896×1200 px — esticada a toda a largura ficaria desfocada). */}
         {foto ? (
           <>
             <img src={foto} alt="" aria-hidden className="absolute inset-0 -z-20 h-full w-full object-cover object-[45%_15%] lg:hidden" />
@@ -98,17 +98,30 @@ export default function Entrada({ nome, barbeiro, morada, mapa, whatsapp, instag
               <button type="button" onClick={onMarcar} className="btn-primary py-4 text-[15px] shadow-[0_0_32px_rgba(227,185,85,0.35)]">
                 Marcar horário
               </button>
-              {/* Atalhos diretos: abrem o Google Maps e o Instagram */}
-              {(mapa || instagram) && (
-                <div className={`grid gap-2.5 ${mapa && instagram ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {/* Atalhos diretos: abrem o Google Maps, o Instagram e o WhatsApp */}
+              {(mapa || instagram || whatsapp) && (
+                <div
+                  className={`grid gap-2.5 ${
+                    [mapa, instagram, whatsapp].filter(Boolean).length === 3
+                      ? 'grid-cols-3'
+                      : [mapa, instagram, whatsapp].filter(Boolean).length === 2
+                        ? 'grid-cols-2'
+                        : 'grid-cols-1'
+                  }`}
+                >
                   {mapa && (
                     <a href={mapa} target="_blank" rel="noreferrer" className={BOTAO_ATALHO}>
-                      <MapPin {...ICONE} className="text-gold" /> Como chegar
+                      <MapPin {...ICONE} className="shrink-0 text-gold" /> Mapa
                     </a>
                   )}
                   {instagram && (
                     <a href={instagram.url} target="_blank" rel="noreferrer" className={BOTAO_ATALHO}>
-                      <IconeInstagram size={16} className="text-gold" /> Instagram
+                      <IconeInstagram size={16} className="shrink-0 text-gold" /> Instagram
+                    </a>
+                  )}
+                  {whatsapp && (
+                    <a href={whatsapp} target="_blank" rel="noreferrer" className={BOTAO_ATALHO}>
+                      <MessageCircle {...ICONE} className="shrink-0 text-gold" /> WhatsApp
                     </a>
                   )}
                 </div>

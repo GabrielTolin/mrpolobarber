@@ -67,7 +67,7 @@ export default function SeccaoDispositivo() {
 
       {push.estado === 'bloqueadas' && (
         <p className="text-sm text-warn">
-          As notificações estão bloqueadas para esta app. No iPhone: Definições → Notificações → MR Polo Barber → Permitir notificações.
+          As notificações estão bloqueadas para esta app. No iPhone: Definições → Notificações → Mr. Polo → Permitir notificações.
           Depois volte aqui.
         </p>
       )}

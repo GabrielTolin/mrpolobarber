@@ -10,6 +10,7 @@ import Carregando from '../../components/Carregando'
 import CabecalhoPagina from '../CabecalhoPagina'
 import { resumoDoCliente, useDashboard } from './inicio/useDashboard'
 import AvisoNotificacoes from './inicio/AvisoNotificacoes'
+import PedidosSemanais from '../semanal/PedidosSemanais'
 import { destinoDe, marcarComoLidas, useNaoLidas } from '../naoLidas'
 
 const COR_PONTO = { confirmed: 'bg-ok', in_progress: 'bg-gold', completed: 'bg-muted-2', cancelled: 'bg-muted-2', no_show: 'bg-warn' }
@@ -80,6 +81,7 @@ export default function Inicio() {
       {erro && <p className="mb-4 text-sm text-warn" role="alert">{erro}</p>}
       {erroAcao && <p className="mb-4 text-sm text-warn" role="alert">{erroAcao}</p>}
       <AvisoNotificacoes />
+      <PedidosSemanais onMudou={recarregar} />
 
       {!dados ? (
         !erro && <Carregando />
@@ -114,6 +116,7 @@ export default function Inicio() {
                         <span className="min-w-0">
                           <span className="block truncate text-[15px] font-semibold">
                             {m.client_name}
+                            {m.source === 'weekly' && <span className="ml-1.5" title="Marcação semanal">🔁</span>}
                             {faltas >= limiteFaltas && <span className="ml-1.5" title={`${faltas} faltas`}>⚠️</span>}
                           </span>
                           <span className="block truncate text-[13px] text-muted">

@@ -24,9 +24,9 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
         id: '/admin',
-        name: 'MR Polo Barber — Painel',
-        short_name: 'MR Polo',
-        description: 'Agenda e marcações do MR Polo Barber.',
+        name: 'Mr. Polo Barber Shop — Painel',
+        short_name: 'Mr. Polo',
+        description: 'Agenda e marcações da Mr. Polo Barber Shop.',
         lang: 'pt-PT',
         // O PWA é para o barbeiro: abre sempre no painel (Arquitetura 3.1, decisão 8).
         start_url: '/admin',

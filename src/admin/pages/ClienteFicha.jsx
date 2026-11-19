@@ -10,6 +10,7 @@ import Carregando from '../../components/Carregando'
 import CabecalhoPagina from '../CabecalhoPagina'
 import ClienteForm from './clientes/ClienteForm'
 import { resumoCliente } from './clientes/clientesApi'
+import SeccaoSemanal from '../semanal/SeccaoSemanal'
 
 // Ficha do cliente (Especificação 2.2, 2.10; Requisitos 1.6, 1.8).
 export default function ClienteFicha() {
@@ -21,9 +22,10 @@ export default function ClienteFicha() {
   const [editar, setEditar] = useState(false)
   const [notas, setNotas] = useState('')
   const [notasOk, setNotasOk] = useState(false)
+  const [temSemanal, setTemSemanal] = useState(false) // série pendente/ativa: avisar antes de tirar "Habitual" ou bloquear
 
   const carregar = useCallback(async () => {
-    const [c, s] = await Promise.all([
+    const [c, s, w] = await Promise.all([
       supabase
         .from('clients')
         .select(
@@ -33,7 +35,9 @@ export default function ClienteFicha() {
         .order('start_at', { referencedTable: 'appointments', ascending: false })
         .maybeSingle(),
       supabase.from('settings').select('no_show_flag_threshold').eq('id', 1).single(),
+      supabase.from('weekly_series').select('id').eq('client_id', id).in('status', ['pending', 'active']),
     ])
+    setTemSemanal((w.data ?? []).length > 0)
     if (c.error) return setErro('Não foi possível carregar o cliente.')
     if (!c.data) return setErro('Cliente não encontrado.')
     setCliente(c.data)
@@ -54,6 +58,13 @@ export default function ClienteFicha() {
   }
 
   async function gravarEdicao(campos) {
+    if (
+      temSemanal &&
+      cliente.is_regular &&
+      campos.is_regular === false &&
+      !window.confirm('Este cliente tem marcação semanal. Ao deixar de ser habitual, a série para e as marcações futuras dela são canceladas. Continuar?')
+    )
+      return { erro: 'Nada foi alterado.' }
     const r = await atualizar(campos)
     if (!r) setEditar(false)
     return r
@@ -63,7 +74,10 @@ export default function ClienteFicha() {
     const bloquear = !cliente.is_blocked
     if (
       bloquear &&
-      !window.confirm(`Bloquear ${cliente.name}? Deixa de conseguir marcar online (a página pede para contactar por WhatsApp).`)
+      !window.confirm(
+        `Bloquear ${cliente.name}? Deixa de conseguir marcar online (a página pede para contactar por WhatsApp).` +
+          (temSemanal ? ' A marcação semanal também para e as marcações futuras dela são canceladas.' : '')
+      )
     )
       return
     const r = await atualizar({ is_blocked: bloquear })
@@ -171,6 +185,8 @@ export default function ClienteFicha() {
               {cliente.is_blocked ? 'Desbloquear' : 'Bloquear marcação online'}
             </button>
           </section>
+
+          <SeccaoSemanal key={`${cliente.is_regular}-${cliente.is_blocked}`} cliente={cliente} onMudou={carregar} />
 
           {erro && <p className="text-sm text-warn" role="alert">{erro}</p>}
 

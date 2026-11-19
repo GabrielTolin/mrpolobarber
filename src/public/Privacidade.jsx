@@ -1,9 +1,15 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { obterInfo } from './publicApi'
+import { formatarTelefone, linkWhatsapp } from '../lib/telefone'
 
 // Política de privacidade (6.6, Requisitos 1.7, P-03/P-04).
-// Descreve o que o sistema faz DE FACTO (ver Arquitetura 3.7–3.9). Os dados que
-// ainda faltam (P-03) aparecem como marcadores [ … ] destacados e têm de ser
-// preenchidos — e o texto revisto — ANTES do lançamento.
+// Descreve o que o sistema faz DE FACTO (ver Arquitetura 3.7–3.9).
+// Responsável, morada e contacto vêm das Configurações → Barbearia (public_info),
+// decisão do Gabriel a 2026-11-16: sem NIF, sem dados escritos duas vezes.
+// O que ainda não estiver preenchido no painel aparece como marcador [ … ].
+
+const DATA_POLITICA = '16 de novembro de 2026'
 
 // Marcador por preencher: bem visível para não escapar na revisão.
 function Falta({ children }) {
@@ -20,14 +26,27 @@ function Seccao({ titulo, children }) {
 }
 
 export default function Privacidade() {
+  const [info, setInfo] = useState(null)
+
+  useEffect(() => {
+    const vivo = { atual: true }
+    obterInfo()
+      .then((dados) => vivo.atual && setInfo(dados ?? {}))
+      .catch(() => vivo.atual && setInfo({}))
+    return () => {
+      vivo.atual = false
+    }
+  }, [])
+
+  const nome = info?.business_name || 'Mr. Polo Barber Shop'
+  const aCarregar = info === null
+
   return (
     <article className="flex flex-col gap-7">
       <header>
-        <p className="eyebrow">Mr. Polo Barber Shop</p>
+        <p className="eyebrow">{nome}</p>
         <h1 className="mt-1 font-serif text-[34px] leading-tight font-semibold">Política de privacidade</h1>
-        <p className="mt-2 text-xs text-muted-2">
-          Última atualização: <Falta>DATA</Falta>
-        </p>
+        <p className="mt-2 text-xs text-muted-2">Última atualização: {DATA_POLITICA}</p>
       </header>
 
       <p className="text-sm leading-relaxed text-fg/80">
@@ -36,12 +55,26 @@ export default function Privacidade() {
       </p>
 
       <Seccao titulo="Quem é o responsável">
-        <p>
-          <Falta>NOME DO RESPONSÁVEL</Falta>, NIF <Falta>NIF</Falta>, com morada em <Falta>MORADA</Falta>.
-        </p>
-        <p>
-          Contacto para questões de privacidade: <Falta>EMAIL OU TELEFONE</Falta>.
-        </p>
+        {aCarregar ? (
+          <p className="text-muted-2">A carregar…</p>
+        ) : (
+          <>
+            <p>
+              A <b>{nome}</b>, com morada em {info.address ? info.address : <Falta>MORADA (Configurações → Barbearia)</Falta>}.
+            </p>
+            <p>
+              Contacto para questões de privacidade:{' '}
+              {info.whatsapp_phone ? (
+                <a href={linkWhatsapp(info.whatsapp_phone, 'Olá! ')} target="_blank" rel="noreferrer" className="text-gold-2 underline">
+                  {formatarTelefone(info.whatsapp_phone)} (WhatsApp)
+                </a>
+              ) : (
+                <Falta>WHATSAPP (Configurações → Barbearia)</Falta>
+              )}
+              , ou pessoalmente na barbearia.
+            </p>
+          </>
+        )}
       </Seccao>
 
       <Seccao titulo="Que dados usamos">

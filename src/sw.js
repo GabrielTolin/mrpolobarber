@@ -27,7 +27,7 @@ self.addEventListener('push', (event) => {
     data = { body: event.data?.text() }
   }
 
-  const title = data.title || 'MR Polo Barber'
+  const title = data.title || 'Mr. Polo Barber Shop'
   const options = {
     body: data.body || '',
     icon: '/pwa-192x192.png',

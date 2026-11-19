@@ -66,6 +66,8 @@ export async function marcarTodasComoLidas() {
 // abre a agenda de hoje; o teste não leva a lado nenhum.
 // `n.appointments` vem do select com `appointments(start_at)`.
 export function destinoDe(n) {
+  // Pedido semanal: aprova-se no Início (o appointment_id é o da 1.ª marcação)
+  if (n.type === 'weekly_request') return '/admin'
   const inicio = n.appointments?.start_at
   if (n.appointment_id && inicio) return `/admin/agenda?data=${partesLisboa(inicio).data}&m=${n.appointment_id}`
   if (n.type === 'daily_summary') return '/admin/agenda'

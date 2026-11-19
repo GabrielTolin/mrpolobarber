@@ -8,6 +8,8 @@ import { estadoEfetivo } from '../../../lib/estados'
 import EscolherCliente from './EscolherCliente'
 
 const ORIGENS_MANUAIS = ['whatsapp', 'phone', 'walk_in']
+// Origens que não se mudam ao editar: online (do cliente) e semanal (gerada pela série).
+const ORIGENS_FIXAS = ['online', 'weekly']
 
 // Nova marcação ou edição (Especificação 2.2 passos 1–8, 2.6).
 // Grava pela função admin_save_booking: verificar → avisar → confirmar.
@@ -182,8 +184,8 @@ export default function MarcacaoForm({ marcacao, inicial, onGuardado }) {
         </label>
         <label className="block">
           <span className="text-sm font-medium text-muted">Origem</span>
-          <select value={origem} disabled={emCurso || origem === 'online'} onChange={(e) => setOrigem(e.target.value)} className="field mt-1.5 disabled:opacity-50">
-            {(origem === 'online' ? ['online'] : ORIGENS_MANUAIS).map((o) => (
+          <select value={origem} disabled={emCurso || ORIGENS_FIXAS.includes(origem)} onChange={(e) => setOrigem(e.target.value)} className="field mt-1.5 disabled:opacity-50">
+            {(ORIGENS_FIXAS.includes(origem) ? [origem] : ORIGENS_MANUAIS).map((o) => (
               <option key={o} value={o}>{ORIGENS[o]}</option>
             ))}
           </select>

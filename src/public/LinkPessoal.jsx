@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { CalendarPlus, MessageCircle } from 'lucide-react'
+import { CalendarPlus, MessageCircle, Repeat } from 'lucide-react'
 import Carregando from '../components/Carregando'
 import ResumoMarcacao from './ui/ResumoMarcacao'
-import { MENSAGENS, cancelarMarcacao, obterInfo, verMarcacao } from './publicApi'
+import { MENSAGENS, cancelarMarcacao, diaSemanaPlural, obterInfo, verMarcacao } from './publicApi'
 import { dataPorExtenso, formatarData, instanteLisboa, partesLisboa } from '../lib/datas'
 import { linkWhatsapp } from '../lib/telefone'
 
@@ -105,7 +105,17 @@ export default function LinkPessoal() {
           {estado.texto}
           {m.status === 'cancelled' && m.cancelled_by === 'barber' && <span className="font-normal text-muted"> pelo barbeiro</span>}
         </p>
+        {m.weekly && ['pending', 'active'].includes(m.weekly.status) && (
+          <p className="flex items-center gap-1.5 text-sm text-gold-2">
+            <Repeat size={14} strokeWidth={2} aria-hidden />
+            Semanal: {diaSemanaPlural(m.weekly.weekday)} às {m.weekly.time_local}
+            <span className="text-muted">· {m.weekly.status === 'active' ? 'ativa' : 'à espera do barbeiro'}</span>
+          </p>
+        )}
       </ResumoMarcacao>
+      {m.weekly?.status === 'active' && (
+        <p className="mt-3 text-xs text-muted-2">Para faltar a uma semana ou deixar a marcação semanal, fale com o barbeiro.</p>
+      )}
 
       {aviso && (
         <div role="alert" className="mt-5 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn">

@@ -14,6 +14,7 @@ Sistema de marcações para a barbearia MR Polo Barber (Albufeira): página púb
 | [docs/PUBLICO.md](docs/PUBLICO.md) | Etapa 6: área pública (marcações online) |
 | [docs/NOTIFICACOES.md](docs/NOTIFICACOES.md) | Etapa 7: notificações ao barbeiro (push, lembrete, resumo do dia) |
 | [docs/LANCAMENTO.md](docs/LANCAMENTO.md) | Etapa 8: lançamento do piloto com o Matheus |
+| [docs/OPERACAO.md](docs/OPERACAO.md) | Operação: repor a palavra-passe, trocar o administrador, o que fazer se algo falhar |
 
 ## Tecnologias
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
-import { CalendarPlus, Check, Copy, MessageCircle } from 'lucide-react'
+import { CalendarPlus, Check, Copy, MessageCircle, Repeat } from 'lucide-react'
 import Carregando from '../components/Carregando'
 import Passo from './ui/Passo'
 import ListaServicos from './ui/ListaServicos'
@@ -10,7 +10,7 @@ import ResumoMarcacao from './ui/ResumoMarcacao'
 import ProximasMarcacoes from './ui/ProximasMarcacoes'
 import { esquecerCliente, esquecerTudo, guardarCliente, juntarMarcacao, lerCliente } from './lembrar'
 import { criarIcs, descarregarIcs } from './ics'
-import { MENSAGENS, mensagemErro, cotarPreco, criarMarcacao, diasDisponiveis, horasDisponiveis, obterInfo, obterServicos } from './publicApi'
+import { MENSAGENS, mensagemErro, cotarPreco, criarMarcacao, diaSemanaPlural, diasDisponiveis, horasDisponiveis, obterInfo, obterServicos, pedirSemanal } from './publicApi'
 import { dataPorExtenso, formatarData, hojeLisboa, instanteLisboa, somarDias } from '../lib/datas'
 import { formatarTelefone, linkWhatsapp, normalizarTelefone } from '../lib/telefone'
 
@@ -35,6 +35,8 @@ function dadosIniciais(telefoneCadastro, telefoneSugerido) {
     nome: !numero || mesmo ? (c?.nome ?? '') : '',
     telefone: telefoneParaCampo(numero ?? c?.telefone),
     observacoes: '',
+    cortes: [],
+    semanal: false, // pedido de marcação semanal (só habituais, S.2)
     lembrar: true,
     armadilha: '',
   }
@@ -64,6 +66,7 @@ export default function Marcar() {
   const [chave, setChave] = useState(null)
   const [resultado, setResultado] = useState(null)
   const [guardado, setGuardado] = useState(false) // a marcação ficou mesmo guardada no dispositivo?
+  const [semanal, setSemanal] = useState(null) // resposta do pedido semanal: null (não pediu) · { ok, weekly_status | error }
   const [aviso, setAviso] = useState(null) // mensagem no topo do passo (ex.: horário ocupado entretanto)
 
   // Nunca mostrar um passo cujos dados anteriores faltam (ex.: abrir ?passo=4 diretamente).
@@ -196,6 +199,7 @@ export default function Marcar() {
           dia={dia}
           hora={hora}
           dados={dados}
+          onMudar={setDados}
           preco={preco}
           precoHabitual={precoHabitual}
           whatsapp={whatsapp}
@@ -206,7 +210,7 @@ export default function Marcar() {
               inicio: hora.start_at,
               nome: dados.nome,
               telefone: normalizarTelefone(dados.telefone),
-              observacoes: dados.observacoes.trim(),
+              observacoes: notaFinal(dados),
               chave,
               armadilha: dados.armadilha,
             })
@@ -219,6 +223,9 @@ export default function Marcar() {
                 esquecerCliente()
                 setGuardado(false)
               }
+              // Marcação semanal: a marcação já está feita; o pedido segue à parte
+              // e fica pendente até o barbeiro aprovar.
+              setSemanal(dados.semanal && precoHabitual ? await pedirSemanal(resposta.code) : null)
               setResultado(resposta)
               ir(6, { substituir: true })
               return null
@@ -248,7 +255,7 @@ export default function Marcar() {
         />
       )}
 
-      {passo === 6 && <Confirmada resultado={resultado} info={info} guardado={guardado} />}
+      {passo === 6 && <Confirmada resultado={resultado} info={info} guardado={guardado} semanal={semanal} />}
     </>
   )
 }
@@ -364,6 +371,20 @@ function PassoHora({ servico, dia, selecionada, onVoltar, onEscolher }) {
 }
 
 // ── Passo 4: dados ───────────────────────────────────────────────────────────
+// Cortes que o cliente pode tocar (pedido do Gabriel, 2026-11-19). Os escolhidos
+// juntam-se às observações numa só nota para o barbeiro (máx. 200 caracteres).
+const CORTES = [
+  'Buzz Cut', 'Low Fade', 'Mid Fade', 'High Fade', 'Skin Fade', 'Taper Fade', 'Low Taper',
+  'Mid Taper', 'Burst Fade', 'Drop Fade', 'French Crop', 'Textured Crop', 'Mullet',
+  'Burst Mullet', 'Modern Mullet', 'Edgar Cut', 'Fluffy Hair', 'Slick Back', 'Side Part', 'Pompadour',
+]
+const MAX_CORTES = 3
+
+function notaFinal(dados) {
+  const corte = dados.cortes?.length ? `Corte: ${dados.cortes.join(', ')}` : ''
+  return [corte, dados.observacoes.trim()].filter(Boolean).join(' · ')
+}
+
 function PassoDados({ servico, dia, hora, dados, telefoneFixo, lembrado, onEsquecer, onMudar, onVoltar, onContinuar }) {
   const [erros, setErros] = useState({})
   const [erroGeral, setErroGeral] = useState(null)
@@ -375,7 +396,7 @@ function PassoDados({ servico, dia, hora, dados, telefoneFixo, lembrado, onEsque
     const novos = {}
     if (dados.nome.trim().length < 2) novos.nome = MENSAGENS.INVALID_NAME
     if (!normalizarTelefone(dados.telefone)) novos.telefone = MENSAGENS.INVALID_PHONE
-    if (dados.observacoes.trim().length > 200) novos.observacoes = MENSAGENS.INVALID_NOTES
+    if (notaFinal(dados).length > 200) novos.observacoes = MENSAGENS.INVALID_NOTES
     setErros(novos)
     setErroGeral(null)
     if (Object.keys(novos).length) return
@@ -437,6 +458,33 @@ function PassoDados({ servico, dia, hora, dados, telefoneFixo, lembrado, onEsque
           {erros.telefone && <span className="mt-1 block text-xs text-warn">{erros.telefone}</span>}
         </label>
 
+        <fieldset>
+          <legend className="text-sm font-medium text-muted">Que corte quer? (opcional)</legend>
+          <span className="mt-0.5 block text-xs text-muted-2">Toque para escolher, até {MAX_CORTES}. Fica como nota para o barbeiro.</span>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {CORTES.map((corte) => {
+              const ativo = dados.cortes.includes(corte)
+              const cheio = !ativo && dados.cortes.length >= MAX_CORTES
+              return (
+                <button
+                  key={corte}
+                  type="button"
+                  aria-pressed={ativo}
+                  disabled={cheio}
+                  onClick={() => onMudar((d) => ({ ...d, cortes: ativo ? d.cortes.filter((c) => c !== corte) : [...d.cortes, corte] }))}
+                  className={`rounded-full border px-3 py-1.5 text-[13px] transition-colors ${
+                    ativo
+                      ? 'border-gold bg-gold/15 font-semibold text-gold-2'
+                      : 'border-line bg-bg/70 text-fg/85 hover:border-line-gold disabled:opacity-40 disabled:hover:border-line'
+                  }`}
+                >
+                  {corte}
+                </button>
+              )
+            })}
+          </div>
+        </fieldset>
+
         <label className="block">
           <span className="text-sm font-medium text-muted">Observações (opcional)</span>
           <input
@@ -480,7 +528,7 @@ function PassoDados({ servico, dia, hora, dados, telefoneFixo, lembrado, onEsque
 }
 
 // ── Passo 5: revisão com o preço ─────────────────────────────────────────────
-function PassoRevisao({ servico, dia, hora, dados, preco, precoHabitual, whatsapp, onVoltar, onConfirmar }) {
+function PassoRevisao({ servico, dia, hora, dados, onMudar, preco, precoHabitual, whatsapp, onVoltar, onConfirmar }) {
   const [aEnviar, setAEnviar] = useState(false)
   const [erro, setErro] = useState(null)
   const enviado = useRef(false)
@@ -509,8 +557,29 @@ function PassoRevisao({ servico, dia, hora, dados, preco, precoHabitual, whatsap
         <p className="text-sm text-muted">
           {dados.nome.trim()} · {formatarTelefone(normalizarTelefone(dados.telefone))}
         </p>
-        {dados.observacoes.trim() && <p className="text-sm text-muted-2">“{dados.observacoes.trim()}”</p>}
+        {notaFinal(dados) && <p className="text-sm text-muted-2">“{notaFinal(dados)}”</p>}
       </ResumoMarcacao>
+
+      {/* Marcação semanal (S.2): só para clientes habituais (o servidor confirma outra vez) */}
+      {precoHabitual && (
+        <label className="card mt-5 flex cursor-pointer items-start gap-3 bg-bg/70">
+          <input
+            type="checkbox"
+            checked={dados.semanal}
+            onChange={(e) => onMudar((d) => ({ ...d, semanal: e.target.checked }))}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-gold)]"
+          />
+          <span>
+            <span className="flex items-center gap-1.5 text-sm font-semibold">
+              <Repeat size={14} strokeWidth={2} className="text-gold" aria-hidden /> Repetir todas as semanas
+            </span>
+            <span className="mt-0.5 block text-xs text-muted">
+              {diaSemanaPlural(dia)[0].toUpperCase() + diaSemanaPlural(dia).slice(1)} às {hora.time_local}. Esta marcação fica já
+              confirmada; as próximas semanas ficam marcadas quando o barbeiro aprovar.
+            </span>
+          </span>
+        </label>
+      )}
 
       {erro && (
         <div role="alert" className="mt-5 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn">
@@ -532,11 +601,11 @@ function PassoRevisao({ servico, dia, hora, dados, preco, precoHabitual, whatsap
 }
 
 // ── Passo 6: confirmada (6.3) ────────────────────────────────────────────────
-function Confirmada({ resultado, info, guardado }) {
+function Confirmada({ resultado, info, guardado, semanal }) {
   const link = `${window.location.origin}/m/${resultado.code}`
   const [copiado, setCopiado] = useState(false)
   const primeiroNome = resultado.client_name?.split(' ')[0]
-  const negocio = info?.business_name ?? 'MR Polo Barber'
+  const negocio = info?.business_name ?? 'Mr. Polo Barber Shop'
   const quando = `${formatarData(resultado.date_local, { ano: false })} às ${resultado.time_local}`
   const whatsapp = info?.whatsapp_phone
     ? linkWhatsapp(info.whatsapp_phone, `Olá! Marquei ${resultado.service_name} para ${quando}.`)
@@ -580,6 +649,7 @@ function Confirmada({ resultado, info, guardado }) {
         duracao={resultado.duration_minutes}
         precoCentimos={resultado.price_cents}
       />
+      {semanal && <AvisoSemanal semanal={semanal} dataLocal={resultado.date_local} hora={resultado.time_local} />}
       <div className="card mt-5 flex flex-col gap-3 bg-bg/70">
         <p className="text-sm font-semibold">O seu link pessoal</p>
         <p className="text-xs text-muted">
@@ -606,6 +676,33 @@ function Confirmada({ resultado, info, guardado }) {
         </Link>
       </div>
     </>
+  )
+}
+
+// Resultado do pedido de marcação semanal no ecrã final.
+function AvisoSemanal({ semanal, dataLocal, hora }) {
+  const dias = diaSemanaPlural(dataLocal)
+  if (!semanal.ok) {
+    return (
+      <div role="alert" className="mt-5 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn">
+        {MENSAGENS[semanal.error] ?? 'Não foi possível pedir a marcação semanal. Fale com o barbeiro.'} Esta marcação ficou feita na mesma.
+      </div>
+    )
+  }
+  return (
+    <div className="card mt-5 flex items-start gap-3 border-line-gold bg-bg/70">
+      <Repeat size={18} strokeWidth={1.8} className="mt-0.5 shrink-0 text-gold" aria-hidden />
+      <p className="text-sm">
+        {semanal.weekly_status === 'active' ? (
+          <>Já tem marcação semanal às {dias}, às {hora}.</>
+        ) : (
+          <>
+            <b>Pedido de marcação semanal enviado</b> ({dias} às {hora}). O barbeiro vai confirmar; até lá, só esta marcação está
+            feita.
+          </>
+        )}
+      </p>
+    </div>
   )
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BellRing, CalendarPlus, CalendarX, CheckCheck, ClipboardList, FlaskConical } from 'lucide-react'
+import { BellRing, CalendarPlus, CalendarX, CheckCheck, ClipboardList, FlaskConical, Repeat } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { hojeLisboa, partesLisboa, somarDias, formatarData } from '../../lib/datas'
 import Carregando from '../../components/Carregando'
@@ -18,6 +18,9 @@ const ICONES = {
   daily_summary: ClipboardList,
   reminder: BellRing,
   test: FlaskConical,
+  weekly_request: Repeat,
+  weekly_skipped: Repeat,
+  weekly_stopped: Repeat,
 }
 
 function grupoDoDia(instante) {

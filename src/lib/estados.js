@@ -32,4 +32,5 @@ export const ORIGENS = {
   whatsapp: 'WhatsApp',
   phone: 'Telefone',
   walk_in: 'Presencial',
+  weekly: 'Semanal',
 }

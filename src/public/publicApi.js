@@ -59,6 +59,13 @@ export const verMarcacao = (codigo) => chamarAcao('get_booking', { p_code: codig
 // "Tenho cadastro" (P-01): diz só se o número é de um cliente HABITUAL registado pelo barbeiro.
 export const verificarHabitual = (telefone) => chamarAcao('check_regular', { p_phone: telefone })
 export const cancelarMarcacao = (codigo) => chamarAcao('cancel_booking', { p_code: codigo })
+// Marcação semanal (S.2): pedido feito com o código da marcação acabada de fazer.
+export const pedirSemanal = (codigo) => chamarAcao('request_weekly', { p_code: codigo })
+
+// "quartas" a partir do dia da semana ISO (1 = segunda) ou de uma data "AAAA-MM-DD".
+const DIAS_PLURAL = ['segundas', 'terças', 'quartas', 'quintas', 'sextas', 'sábados', 'domingos']
+export const diaSemanaPlural = (isoOuData) =>
+  DIAS_PLURAL[(typeof isoOuData === 'number' ? isoOuData : ((new Date(`${isoOuData}T12:00:00Z`).getUTCDay() + 6) % 7) + 1) - 1]
 
 // Mensagens ao cliente para cada código de erro (Arquitetura 3.6 §4, 3.7 §4;
 // textos da Especificação 2.1, casos excecionais).
@@ -83,6 +90,8 @@ export const MENSAGENS = {
   NOT_FOUND: 'Este link não corresponde a nenhuma marcação. Confirme se o copiou inteiro.',
   TOO_LATE_TO_CANCEL: 'Já não é possível cancelar online. Contacte o barbeiro.',
   ALREADY_CANCELLED: 'Esta marcação já estava cancelada.',
+  NOT_REGULAR: 'A marcação semanal é só para clientes habituais. Fale com o barbeiro.',
+  WEEKLY_NOT_ALLOWED: 'Não foi possível pedir a marcação semanal. Fale com o barbeiro.',
 }
 
 // ── Horário semanal (public_info.weekly_hours) em texto ──────────────────────

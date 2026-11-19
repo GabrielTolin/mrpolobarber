@@ -46,7 +46,7 @@ Descreve **como** o sistema se comporta para cumprir o [Documento de Requisitos]
 - **Categoria não é escolhida pelo cliente:** é automática pelo telemóvel (RN-04).
 - **Preço só no passo 6**, depois do telemóvel.
 - **Proteção contra marcações falsas:**
-  - no máximo **2 marcações futuras ativas por telemóvel** (configurável no painel);
+  - no máximo **2 marcações futuras ativas por telemóvel** (configurável no painel). **Alteração de 2026-11-19:** as marcações geradas por uma **marcação semanal** não contam para este limite (D6, ver [SEMANAL.md](SEMANAL.md));
   - proteção anti-bot invisível no formulário (ex.: campo armadilha e limite de pedidos).
 
 ### Casos excecionais
