@@ -117,6 +117,11 @@ export default function Privacidade() {
           enviados para nós.
         </p>
         <p>
+          Se ativar o <b>lembrete no dia da marcação</b>, o seu navegador cria um endereço técnico de notificações, que guardamos ligado à
+          sua ficha para lhe enviar uma notificação às 08:00 no dia de cada marcação. Não contém o seu nome nem o telemóvel. Pode desativar
+          no ecrã da marcação ou no seu link pessoal; é apagado também quando deixa de funcionar ou se os seus dados forem anonimizados.
+        </p>
+        <p>
           Pode apagá-los a qualquer momento em <b>"Não sou eu / esquecer os meus dados"</b>, na página de marcação, ou limpando os dados do
           navegador.
         </p>

@@ -12,6 +12,7 @@ export default function SeccaoNotificacoes({ settings, gravar }) {
     daily_summary_time: horaCurta(settings.daily_summary_time),
     reminder_enabled: settings.reminder_enabled,
     reminder_minutes: String(settings.reminder_minutes),
+    client_reminder_enabled: settings.client_reminder_enabled ?? true,
   })
   const [erro, setErro] = useState('')
   const [ok, setOk] = useState('')
@@ -54,6 +55,15 @@ export default function SeccaoNotificacoes({ settings, gravar }) {
         <Opcao label="Lembrete antes de cada marcação," checked={v.reminder_enabled} onChange={(c) => mudar('reminder_enabled', c)} />
         <input inputMode="numeric" value={v.reminder_minutes} onChange={(e) => mudar('reminder_minutes', e.target.value)} className="field w-20" />
         <span className="text-sm text-muted-2">min antes</span>
+      </div>
+
+      <div className="border-t border-line-soft pt-4">
+        <Opcao
+          label="Lembrete aos clientes às 08:00 do dia da marcação"
+          checked={v.client_reminder_enabled}
+          onChange={(c) => mudar('client_reminder_enabled', c)}
+        />
+        <p className="mt-1 pl-7 text-xs text-muted-2">Só chega aos clientes que ativaram os lembretes no telemóvel deles.</p>
       </div>
 
       <Mensagem erro={erro} ok={ok} />

@@ -8,6 +8,7 @@ import Calendario from './ui/Calendario'
 import GrelhaHoras from './ui/GrelhaHoras'
 import ResumoMarcacao from './ui/ResumoMarcacao'
 import ProximasMarcacoes from './ui/ProximasMarcacoes'
+import AtivarLembretes from './ui/AtivarLembretes'
 import { esquecerCliente, esquecerTudo, guardarCliente, juntarMarcacao, lerCliente } from './lembrar'
 import { criarIcs, descarregarIcs } from './ics'
 import { MENSAGENS, mensagemErro, cotarPreco, criarMarcacao, diaSemanaPlural, diasDisponiveis, horasDisponiveis, obterInfo, obterServicos, pedirSemanal } from './publicApi'
@@ -650,6 +651,7 @@ function Confirmada({ resultado, info, guardado, semanal }) {
         precoCentimos={resultado.price_cents}
       />
       {semanal && <AvisoSemanal semanal={semanal} dataLocal={resultado.date_local} hora={resultado.time_local} />}
+      <AtivarLembretes codigo={resultado.code} />
       <div className="card mt-5 flex flex-col gap-3 bg-bg/70">
         <p className="text-sm font-semibold">O seu link pessoal</p>
         <p className="text-xs text-muted">

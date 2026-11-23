@@ -7,6 +7,10 @@
 //   3. apaga os aparelhos expirados (404/410) e grava push_sent_at.
 // Se o push falhar, a notificação continua no painel (fonte de verdade).
 //
+// Lembretes aos CLIENTES (2026-11-23): corpo { client_message_id } → envia a
+// mensagem de client_push_messages aos aparelhos desse cliente
+// (client_push_subscriptions), apaga os expirados e grava sent_at.
+//
 // Segredos (supabase secrets): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT,
 // PUSH_SHARED_SECRET. SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY vêm da Supabase.
 import { createClient } from 'jsr:@supabase/supabase-js@2'
@@ -34,14 +38,18 @@ Deno.serve(async (req) => {
   if (!iguais(req.headers.get('x-push-secret') ?? '', env('PUSH_SHARED_SECRET'))) return json({ error: 'unauthorized' }, 401)
 
   let notificationId: string | undefined
+  let clientMessageId: string | undefined
   try {
-    notificationId = (await req.json())?.notification_id
+    const corpo = await req.json()
+    notificationId = corpo?.notification_id
+    clientMessageId = corpo?.client_message_id
   } catch {
     /* corpo inválido */
   }
-  if (!notificationId) return json({ error: 'notification_id' }, 400)
+  if (!notificationId && !clientMessageId) return json({ error: 'notification_id' }, 400)
 
   const db = createClient(env('SUPABASE_URL'), env('SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false } })
+  if (clientMessageId) return enviarAoCliente(db, clientMessageId)
 
   const { data: n, error: erroN } = await db
     .from('notifications')
@@ -97,3 +105,51 @@ Deno.serve(async (req) => {
 
   return json({ ok: true, aparelhos: aparelhos?.length ?? 0, enviados, expirados: expirados.length, falhas })
 })
+
+// Lembrete a um cliente: todos os aparelhos que ele ativou.
+// deno-lint-ignore no-explicit-any
+async function enviarAoCliente(db: any, id: string) {
+  const { data: m, error } = await db
+    .from('client_push_messages')
+    .select('id, client_id, title, body, url, sent_at')
+    .eq('id', id)
+    .maybeSingle()
+  if (error) return json({ error: error.message }, 500)
+  if (!m) return json({ error: 'not_found' }, 404)
+  if (m.sent_at) return json({ ok: true, repetido: true })
+
+  const { data: aparelhos, error: erroA } = await db
+    .from('client_push_subscriptions')
+    .select('id, endpoint, p256dh, auth')
+    .eq('client_id', m.client_id)
+  if (erroA) return json({ error: erroA.message }, 500)
+
+  const vapid = { publica: env('VAPID_PUBLIC_KEY'), privada: env('VAPID_PRIVATE_KEY'), contacto: env('VAPID_SUBJECT') }
+  const conteudo = { title: m.title, body: m.body, url: m.url || '/', tag: m.id }
+
+  let enviados = 0
+  const expirados: string[] = []
+  const falhas: number[] = []
+  for (const a of aparelhos ?? []) {
+    try {
+      const status = await enviarPush(a, conteudo, vapid)
+      if (status >= 200 && status < 300) enviados++
+      else if (status === 404 || status === 410) expirados.push(a.id)
+      else falhas.push(status)
+    } catch (e) {
+      console.error('lembrete falhou', a.id, e)
+      falhas.push(0)
+    }
+  }
+
+  const agora = new Date().toISOString()
+  if (expirados.length) await db.from('client_push_subscriptions').delete().in('id', expirados)
+  if (enviados) {
+    await db.from('client_push_messages').update({ sent_at: agora }).eq('id', m.id)
+    await db
+      .from('client_push_subscriptions')
+      .update({ last_used_at: agora })
+      .in('id', (aparelhos ?? []).filter((a: { id: string }) => !expirados.includes(a.id)).map((a: { id: string }) => a.id))
+  }
+  return json({ ok: true, aparelhos: aparelhos?.length ?? 0, enviados, expirados: expirados.length, falhas })
+}

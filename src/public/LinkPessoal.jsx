@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { CalendarPlus, MessageCircle, Repeat } from 'lucide-react'
 import Carregando from '../components/Carregando'
 import ResumoMarcacao from './ui/ResumoMarcacao'
+import AtivarLembretes from './ui/AtivarLembretes'
 import { MENSAGENS, cancelarMarcacao, diaSemanaPlural, obterInfo, verMarcacao } from './publicApi'
 import { dataPorExtenso, formatarData, instanteLisboa, partesLisboa } from '../lib/datas'
 import { linkWhatsapp } from '../lib/telefone'
@@ -113,6 +114,7 @@ export default function LinkPessoal() {
           </p>
         )}
       </ResumoMarcacao>
+      {(m.status === 'confirmed' || m.weekly?.status === 'active') && <AtivarLembretes codigo={token} />}
       {m.weekly?.status === 'active' && (
         <p className="mt-3 text-xs text-muted-2">Para faltar a uma semana ou deixar a marcação semanal, fale com o barbeiro.</p>
       )}

@@ -56,6 +56,12 @@ export default function Clientes() {
   return (
     <>
       <CabecalhoPagina titulo="Clientes">
+        {!aCarregar && !erro && (
+          <div className="flex gap-7">
+            <Contador valor={clientes.length} label="clientes" />
+            <Contador valor={clientes.filter((c) => c.is_regular).length} label="habituais" destaque />
+          </div>
+        )}
         {!novo && (
           <button type="button" onClick={() => setNovo(true)} className="btn-primary">
             + Novo cliente
@@ -114,5 +120,15 @@ export default function Clientes() {
         </section>
       </div>
     </>
+  )
+}
+
+// Número grande com legenda (igual ao do Início).
+function Contador({ valor, label, destaque }) {
+  return (
+    <div className="flex flex-col items-end">
+      <b className={`font-serif text-[34px] leading-none font-semibold ${destaque ? 'text-gold' : ''}`}>{valor}</b>
+      <span className="text-xs text-muted">{label}</span>
+    </div>
   )
 }

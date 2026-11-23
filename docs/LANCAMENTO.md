@@ -70,6 +70,55 @@ Buzz Cut, Low Fade, Mid Fade, High Fade, Skin Fade, Taper Fade, Low Taper, Mid T
 
 ---
 
+## Ajustes de 2026-11-23 (2.ª parte) ✅
+
+**Regra do Gabriel:** tudo o que muda tem de chegar aos clientes **sem apagarem e voltarem a instalar o ícone**. Só o administrador pode reinstalar.
+
+- **Contador nos Clientes:** "N clientes · M habituais", com os habituais em dourado (`pages/Clientes.jsx`).
+- **Antecedência mínima de 30 min:** `min_notice_minutes = 30`, aplicado no servidor com o OK do Gabriel. Antes era 60, valor que o Matheus tinha posto. O cancelamento continua até 2 h antes.
+- **Botão "Sou cliente" no login:** feito e **retirado** a pedido do Gabriel. O acesso ao login já tinha sido corrigido no commit `5c1a68f`.
+
+### Lembrete aos clientes no dia da marcação ✅ *(decisão: uma notificação às 08:00)*
+
+Migration `20261123120000_client_reminders.sql` e Edge Function `send-push`, aplicadas e publicadas com o OK do Gabriel.
+
+| Peça | O que faz |
+|---|---|
+| `client_push_subscriptions` | Aparelhos dos clientes, ligados à **ficha** (cliente). Só o servidor lê. No máximo 5 por cliente |
+| `client_push_messages` | Uma mensagem por marcação e tipo. Cada mensagem nova chama a `send-push` com `{ client_message_id }` |
+| `subscribe_client_push(código, …)` / `unsubscribe_client_push(endpoint)` | Públicas, com limite de pedidos. O código da marcação prova quem é |
+| `send_client_reminders()` | No tick de cada minuto, entre as 08:00 e as 08:10: marcações **confirmadas de hoje** de clientes com aparelho → "Hoje às 15:00: Cabelo e barba na Mr. Polo Barber Shop. Até já!". Não repete. Apaga as mensagens com mais de 30 dias e os aparelhos de clientes anonimizados |
+| `settings.client_reminder_enabled` | Interruptor no painel: Configurações → Notificações → "Lembrete aos clientes às 08:00" |
+| `src/public/ui/AtivarLembretes.jsx` | Cartão **"Lembrete no dia da marcação → Ativar lembrete"** no ecrã final e no link pessoal. No iPhone fora do ecrã principal, explica como instalar. Tem "Desativar" |
+| Política de privacidade | Parágrafo sobre o endereço de notificações |
+
+- **Para quem vale:** o aparelho fica ligado à ficha, por isso o cliente recebe o lembrete de **todas** as marcações, incluindo as feitas pelo barbeiro e as semanais. Marcações feitas no próprio dia depois das 08:00 não têm lembrete.
+- **Testes no servidor** (desfeitos; as marcações de teste ficaram por cima das reais, como sobreposição intencional, e nada ficou gravado):
+  1. Código errado → `NOT_FOUND`; endpoint sem https → `INVALID_REQUEST`; ativar → ok, e ativar de novo também.
+  2. Às 07:59 → 0; às 08:05 → **2** (marcação online e marcação do barbeiro do mesmo cliente); repetir → 0; às 09:00 → 0.
+  3. Um cliente sem aparelho não recebe mensagem.
+  4. Uma marcação cancelada não recebe; com o interruptor desligado → 0.
+  5. Desativar → ok.
+  6. O anónimo só executa ativar e desativar; não lê as tabelas nem chama o envio. O cron está atualizado.
+- **Falta testar num telemóvel real:** ativar a partir de uma marcação e receber às 08:00 do dia.
+
+### Pedido de avaliação no Google ⏸️ *(começado a 2026-11-23; continua no dia seguinte)*
+
+O Gabriel escolheu os **três caminhos**:
+1. **push 2 h depois** de uma marcação concluída;
+2. **cartão "Como foi o seu corte?"** da próxima vez que o cliente abrir a app;
+3. **botão "Pedir avaliação"** por WhatsApp no painel;
+
+e um link no rodapé. **Regra:** um pedido por cliente, no máximo outro passados 6 meses. Faltas e canceladas nunca recebem.
+
+- **Falta o link certo.** O que foi enviado (`maps.app.goo.gl/X5CUF7…`) abre a **página** da barbearia no Maps, não o formulário. O link certo obtém-se no Perfil da Empresa → "Pedir avaliações" (`https://g.page/r/…/review`) e o link fica num campo novo nas Configurações → Barbearia.
+- **Trabalho já escrito, guardado fora do repositório**, em `Desktop\mrpolobarber-backups\2026-11-23_avaliacoes-por-acabar\`:
+  - `20261123140000_review_requests.sql` (não aplicada): `settings.review_url`, `clients.review_requested_at`, `send_review_requests()` no tick, `review_check(códigos)` e `public_info` com `review_url`;
+  - `avaliacoes.patch`: memória do telemóvel (`mpb.para-avaliar`), `verificarAvaliacao`, o campo nas Configurações, os dados do painel e o service worker a abrir links de outros sites.
+- **Ainda por escrever:** o cartão na página inicial, o botão no detalhe da marcação, o link no rodapé, os testes e a política de privacidade.
+
+---
+
 ## Ajustes antes da 8.4 ✅ *(2026-11-23, pedido do Gabriel)*
 
 **Regras** (migration `20261123100000_agenda_1_ano_4_marcacoes.sql`, aplicada com o OK do Gabriel):
@@ -98,7 +147,19 @@ Buzz Cut, Low Fade, Mid Fade, High Fade, Skin Fade, Taper Fade, Low Taper, Mid T
 
 ---
 
-## 8.4 — Instalação no iPhone do Matheus 🔶 *(guia escrito a 2026-11-19; à espera de ser feita)*
+## 8.4 — Instalação no iPhone do Matheus ✅ *(feita a 2026-11-19; verificada no servidor a 2026-11-23)*
+
+**Verificado no servidor (2026-11-23):**
+- 1 aparelho registado: conta `mathybarber01@gmail.com`, iPhone com iOS 18.7, a 19/11 às 16:16.
+- 2 notificações de teste, enviadas em 1 segundo (19/11, 16:16 e 16:19).
+- Dados que o Matheus já pôs no painel:
+  - **36 clientes habituais**;
+  - **preços de visitante** (Cabelo e barba 20/23 €, Máquina 17/20 €, Barba 9/10 €; Tesoura e Criança iguais);
+  - um serviço novo, **"Raspar + barba"** (15/18 €).
+- **Produção depois do push de 2026-11-23:** `/` e `/marcar` usam o manifesto público; `/admin` e `/admin/agenda` usam o do painel.
+- **O ícone do Matheus** foi instalado a partir do `/admin` antes da correção dos manifestos e abre no painel, como deve.
+
+**O guia usado:**
 
 **Antes:** o iPhone tem de estar com iOS **16.4 ou mais recente** (Definições → Geral → Informações), senão não há notificações. O site em produção já tem a versão final: foto nova e ícone "Mr. Polo" (verificado a 2026-11-19).
 
