@@ -5,7 +5,7 @@ import Mensagem from './Mensagem'
 // Os campos em horas são guardados em minutos.
 const REGRAS = [
   { campo: 'min_notice_minutes', label: 'Antecedência mínima', unidade: 'horas', emHoras: true, min: 0, max: 48, passo: 0.5, ajuda: 'Tempo mínimo entre a marcação online e o atendimento.' },
-  { campo: 'max_days_ahead', label: 'Marcar até', unidade: 'dias no futuro', min: 1, max: 180, passo: 1 },
+  { campo: 'max_days_ahead', label: 'Marcar até', unidade: 'dias no futuro', min: 1, max: 366, passo: 1 },
   { campo: 'slot_step_minutes', label: 'Grelha de horários', unidade: 'min', min: 5, max: 60, passo: 5, ajuda: 'Além da grelha, o fim de cada marcação também aparece como horário (encaixe).' },
   { campo: 'buffer_minutes', label: 'Intervalo entre marcações', unidade: 'min', min: 0, max: 60, passo: 5 },
   { campo: 'max_active_per_phone', label: 'Marcações futuras por telemóvel', unidade: 'no máximo', min: 1, max: 10, passo: 1, ajuda: 'Proteção contra marcações falsas.' },

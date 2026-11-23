@@ -68,7 +68,7 @@ Este documento é a referência do projeto durante todo o desenvolvimento. Os va
 | RN-07 | Marcações manuais podem ignorar a antecedência mínima, o limite de dias e o horário de funcionamento (com aviso), e podem sobrepor-se a outras com aviso e confirmação (RN-01) |
 | RN-08 | Os valores das regras são configuráveis no painel (ver secção 6) |
 | RN-09 | O estado da marcação avança **automaticamente**: Confirmada → Em andamento (na hora de início) → Concluída (na hora de fim). **Falta** só pelo barbeiro, manualmente, e é o que conta no registo do cliente (v1.1) |
-| RN-10 | No máximo **2 marcações futuras ativas por telemóvel** nas marcações online (configurável) (v1.2) |
+| RN-10 | No máximo **2 marcações futuras ativas por telemóvel** nas marcações online (configurável) (v1.2). **Alterado a 2026-11-23: 4** (o cliente pode marcar também para o filho no próprio nome); as da marcação semanal não contam |
 | RN-11 | O nome escrito numa marcação online **não altera a ficha** de um cliente existente (v1.2) |
 
 ---
@@ -111,7 +111,7 @@ Preços **fixos**, editáveis no painel. Preço de visitante igual ao habitual a
 |---|---|
 | Marcar para o próprio dia | Sim |
 | Antecedência mínima | 2 horas |
-| Máximo de dias no futuro | 30 dias |
+| Máximo de dias no futuro | 30 dias · **alterado a 2026-11-23: 365 dias (1 ano)** |
 | Intervalo dos horários mostrados | 15 min + **encaixe** no fim de cada marcação/bloqueio (v1.1, 2.4) |
 | Serviços por marcação | 1 |
 | Intervalo entre marcações | 0 min |

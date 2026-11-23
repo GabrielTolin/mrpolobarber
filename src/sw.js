@@ -1,6 +1,6 @@
 /* Service worker do MR Polo Barber (modo injectManifest, Arquitetura 3.10).
  * - Pré-carrega os ficheiros do site (funciona sem rede depois da 1.ª visita).
- * - Navegação da SPA: qualquer rota devolve o index.html.
+ * - Navegação da SPA: /admin… devolve o admin.html; o resto devolve o index.html.
  * - Push: mostra a notificação e atualiza o badge do ícone (2.9).
  * - Toque na notificação: abre o PWA no endereço indicado.
  */
@@ -15,7 +15,10 @@ cleanupOutdatedCaches()
 precacheAndRoute(self.__WB_MANIFEST)
 
 // Pedidos ao Supabase são de outro domínio e não passam por aqui (vão sempre à rede).
-registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')))
+// /admin… → admin.html (manifesto do painel); o resto → index.html (manifesto público).
+const PAINEL = [/^\/admin(\/|$)/]
+registerRoute(new NavigationRoute(createHandlerBoundToURL('admin.html'), { allowlist: PAINEL }))
+registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html'), { denylist: PAINEL }))
 
 // Conteúdo esperado do push (enviado pela Edge Function send-push, 3.8):
 // { title, body, url, unread }

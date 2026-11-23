@@ -263,7 +263,7 @@ export default function Marcar() {
 // ── Passo 2: dia ─────────────────────────────────────────────────────────────
 function PassoDia({ servico, limite, selecionado, whatsapp, onVoltar, onEscolher }) {
   const hoje = hojeLisboa()
-  // Todos os dias com vagas até ao limite (30 dias), de uma vez: assim sabe-se logo
+  // Todos os dias com vagas até ao limite (max_days_ahead: 365 desde 2026-11-23), de uma vez: assim sabe-se logo
   // se não há vagas nenhuma (2.1) e o calendário abre no 1.º mês com vagas.
   const [estado, setEstado] = useState({ chave: null, dias: null, erro: null })
   const [mesEscolhido, setMesEscolhido] = useState(selecionado?.slice(0, 7) ?? null)
@@ -296,11 +296,11 @@ function PassoDia({ servico, limite, selecionado, whatsapp, onVoltar, onEscolher
       <Passo numero={2} titulo="Escolha o dia" subtitulo={`${servico.name} · ${servico.duration_minutes} min`} onVoltar={onVoltar} />
 
       {semVagas ? (
-        // Sem vagas nos próximos 30 dias (2.1, casos excecionais): mensagem + WhatsApp
+        // Sem vagas até ao limite (2.1, casos excecionais): mensagem + WhatsApp
         <div className="card bg-bg/70 text-center">
           <p className="font-serif text-[24px] leading-tight font-semibold">Sem vagas nos próximos dias</p>
           <p className="mt-2 text-sm text-muted">
-            De momento não há horários livres para {servico.name.toLowerCase()} nos próximos 30 dias. Fale com o barbeiro para ver outra
+            De momento não há horários livres para {servico.name.toLowerCase()}. Fale com o barbeiro para ver outra
             opção.
           </p>
           {whatsapp ? (

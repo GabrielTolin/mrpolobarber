@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Repeat } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { formatarEuros } from '../../lib/dinheiro'
@@ -116,7 +117,7 @@ export default function Inicio() {
                         <span className="min-w-0">
                           <span className="block truncate text-[15px] font-semibold">
                             {m.client_name}
-                            {m.source === 'weekly' && <span className="ml-1.5" title="Marcação semanal">🔁</span>}
+                            {m.source === 'weekly' && <Repeat size={14} strokeWidth={2.2} className="mb-0.5 ml-1.5 inline text-gold" aria-label="Marcação semanal" />}
                             {faltas >= limiteFaltas && <span className="ml-1.5" title={`${faltas} faltas`}>⚠️</span>}
                           </span>
                           <span className="block truncate text-[13px] text-muted">

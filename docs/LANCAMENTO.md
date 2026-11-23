@@ -70,6 +70,73 @@ Buzz Cut, Low Fade, Mid Fade, High Fade, Skin Fade, Taper Fade, Low Taper, Mid T
 
 ---
 
+## Ajustes antes da 8.4 ✅ *(2026-11-23, pedido do Gabriel)*
+
+**Regras** (migration `20261123100000_agenda_1_ano_4_marcacoes.sql`, aplicada com o OK do Gabriel):
+- **A agenda pública abre 1 ano à frente:** `max_days_ahead` passou de 30 para **365**. O máximo permitido passou de 180 para 366, na base de dados e nas Configurações.
+- **Até 4 marcações futuras por telemóvel:** `max_active_per_phone` passou de 2 para **4**, para o cliente poder marcar também para o filho no próprio nome. As marcações semanais continuam a não contar.
+- **Verificado:**
+  - no servidor, há vagas até daqui a 365 dias e nenhuma depois;
+  - no calendário público, avança mês a mês de novembro de 2026 a **novembro de 2027** e para aí.
+- **Textos:** os que diziam "30 dias" ou "2 marcações" foram tirados, porque agora são números configuráveis.
+
+**Instalar a página pública abria o painel.** Havia um só manifesto, com `start_url: /admin`, e um cliente que adicionasse a página pública ao ecrã principal ficava com o painel. Agora há dois:
+
+| Página | Manifesto | Abre em |
+|---|---|---|
+| `index.html` (/, /marcar, /m/…, /privacidade) | `public/manifest-publico.webmanifest`: "Mr. Polo Barber Shop", id `/` | `/` |
+| `admin.html` (/admin…) | `public/manifest-painel.webmanifest`: "Mr. Polo Barber Shop — Painel", id `/admin` | `/admin` |
+
+- **Vite:** `manifest: false` no plugin do PWA e duas páginas de entrada (`index.html` e `admin.html`, com o mesmo código da app).
+- **Vercel:** `/admin` e `/admin/…` são servidos pelo `admin.html`, e o resto pelo `index.html`.
+- **Service worker:** nas navegações para `/admin…` devolve o `admin.html`, e nas outras o `index.html`.
+- **Verificado com a versão de produção local** (`npm run preview`, com o service worker ativo):
+  - `/` e `/marcar` usam o manifesto público;
+  - `/admin` e `/admin/agenda` usam o manifesto do painel;
+  - o build está OK.
+- **Quem já instalou a página pública antes desta correção** fica com o ícone antigo, que abre o painel. É preciso **apagar o ícone e voltar a adicioná-lo**. O Matheus ainda não instalou, por isso não é afetado.
+
+---
+
+## 8.4 — Instalação no iPhone do Matheus 🔶 *(guia escrito a 2026-11-19; à espera de ser feita)*
+
+**Antes:** o iPhone tem de estar com iOS **16.4 ou mais recente** (Definições → Geral → Informações), senão não há notificações. O site em produção já tem a versão final: foto nova e ícone "Mr. Polo" (verificado a 2026-11-19).
+
+**1. Instalar (no Safari, não no Chrome)**
+1. Abrir **https://mrpolobarber.vercel.app/admin** no Safari.
+2. Tocar em **Partilhar** (quadrado com seta) → **Adicionar ao ecrã principal** → o nome aparece "Mr. Polo" → **Adicionar**.
+3. Fechar o Safari e abrir **pelo ícone** no ecrã principal. A partir daqui, usa-se sempre o ícone.
+
+**2. Entrar e proteger a conta**
+1. Entrar com `mathybarber01@gmail.com` e a palavra-passe.
+2. **Configurações → Conta → Mudar palavra-passe**, para uma que só o Matheus saiba (a atual ficou escrita no chat).
+
+**3. Notificações**
+1. **Configurações → Notificações neste dispositivo → Ativar notificações** → **Permitir**.
+2. **Enviar notificação de teste**: tem de chegar em segundos, mesmo com a app fechada.
+3. Se não chegar: Definições do iPhone → Notificações → **Mr. Polo** → Permitir notificações.
+
+**4. Dados que só o Matheus sabe (pendentes da 8.0)**
+- **Serviços e preços:** o **preço de visitante** de cada serviço. Hoje está igual ao de habitual.
+- **Clientes:** ligar **"Habitual"** nos clientes da casa, com o telemóvel certo. Só esses pagam o preço de habitual e podem pedir a marcação semanal.
+- **Horários:** confirmar o sábado e o Carnaval.
+
+**5. Mostrar o essencial (10 minutos)**
+
+| No painel | O quê |
+|---|---|
+| Início | Marcações de hoje, próxima marcação, **pedidos de marcação semanal** (Aprovar/Recusar), pendências |
+| Agenda | **+ Nova marcação** (WhatsApp, telefone, presencial) · tocar numa marcação → editar, cancelar, **registar falta** (só depois de 10 min), avisar por WhatsApp · 🔁 = semanal |
+| Horários e bloqueios | Folgas e férias: bloquear antes de faltar, para ninguém marcar |
+| Clientes | Ficha: Habitual, bloquear online, notas internas, **marcação semanal** (criar/parar) |
+| Notificações | Marcações novas, cancelamentos, resumo das 08:00, lembretes 5 min antes |
+
+**6. Verificação (Claude, no servidor)**
+- 1 aparelho registado em `push_subscriptions`.
+- A notificação de teste foi criada e enviada (`push_sent_at` preenchido).
+
+---
+
 ## 8.3 — Limpeza dos dados de teste ✅ *(2026-11-19)*
 
 - **Cópia de segurança antes de mexer:** um JSON por tabela e a lista de contas, em `Desktop\mrpolobarber-backups\2026-11-19_antes-limpeza-8.3\`, fora do repositório.

@@ -22,28 +22,17 @@ export default defineConfig({
         globIgnores: ['**/icon-source.png', '**/*-cyrillic*', '**/*-greek*', '**/*-vietnamese*'],
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png'],
-      manifest: {
-        id: '/admin',
-        name: 'Mr. Polo Barber Shop — Painel',
-        short_name: 'Mr. Polo',
-        description: 'Agenda e marcações da Mr. Polo Barber Shop.',
-        lang: 'pt-PT',
-        // O PWA é para o barbeiro: abre sempre no painel (Arquitetura 3.1, decisão 8).
-        start_url: '/admin',
-        scope: '/',
-        display: 'standalone',
-        orientation: 'portrait',
-        theme_color: '#000000',
-        background_color: '#0d0c0a',
-        icons: [
-          { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
-          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'maskable-icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-        ],
-      },
+      // Dois manifestos em public/ (2026-11-23): manifest-publico (index.html, abre em /) e
+      // manifest-painel (admin.html, abre em /admin). Antes havia um só, com start_url /admin,
+      // e um cliente que instalasse a página pública ficava com o painel no ecrã principal.
+      manifest: false,
     }),
   ],
+  build: {
+    rollupOptions: {
+      input: { main: 'index.html', admin: 'admin.html' },
+    },
+  },
   server: {
     port: 5174, // 5173 fica para o TS Hours, para poderem correr em paralelo
     host: true, // expõe na rede local (aceder pelo telemóvel: http://<IP-do-PC>:5174)

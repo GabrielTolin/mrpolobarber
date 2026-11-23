@@ -46,7 +46,7 @@ Descreve **como** o sistema se comporta para cumprir o [Documento de Requisitos]
 - **Categoria não é escolhida pelo cliente:** é automática pelo telemóvel (RN-04).
 - **Preço só no passo 6**, depois do telemóvel.
 - **Proteção contra marcações falsas:**
-  - no máximo **2 marcações futuras ativas por telemóvel** (configurável no painel). **Alteração de 2026-11-19:** as marcações geradas por uma **marcação semanal** não contam para este limite (D6, ver [SEMANAL.md](SEMANAL.md));
+  - no máximo **2 marcações futuras ativas por telemóvel** (configurável no painel) — **4 desde 2026-11-23**. **Alteração de 2026-11-19:** as marcações geradas por uma **marcação semanal** não contam para este limite (D6, ver [SEMANAL.md](SEMANAL.md));
   - proteção anti-bot invisível no formulário (ex.: campo armadilha e limite de pedidos).
 
 ### Casos excecionais
@@ -642,11 +642,11 @@ Sem contradições. A proposta tinha 5 itens. Como todas as regras decididas ant
 |---|---|---|
 | Permitir marcar para o próprio dia | Sim | 1.4 |
 | Antecedência mínima | 2 h | 1.4 |
-| Antecedência máxima (dias no futuro) | 30 dias | 1.4 |
+| Antecedência máxima (dias no futuro) | 30 dias → **365 (2026-11-23)** | 1.4 |
 | Grelha de horários | 15 min (+ encaixe, sempre ativo) | 1.4 / 2.4 |
 | Intervalo entre marcações | 0 min | 1.4 |
 | Serviços por marcação | 1 | 1.4 |
-| ➕ Máx. de marcações futuras por telemóvel | 2 | 2.1 |
+| ➕ Máx. de marcações futuras por telemóvel | 2 → **4 (2026-11-23)** | 2.1 |
 | ➕ Prazo para o cliente cancelar | 2 h antes | 1.5 |
 | ➕ Tolerância de atraso | 10 min | 1.6 |
 | ➕ Faltas para sinalizar ⚠️ | 2 | 1.6 |

@@ -78,7 +78,7 @@ export const MENSAGENS = {
   SLOT_TAKEN: 'Esse horário acabou de ser ocupado. Escolha outro.',
   TOO_LATE: 'Esse horário já não está disponível. Escolha outro.',
   PHONE_BLOCKED: 'Não é possível marcar online. Contacte o barbeiro.',
-  LIMIT_REACHED: 'Já tem 2 marcações agendadas. Para mais, contacte o barbeiro.',
+  LIMIT_REACHED: 'Já atingiu o limite de marcações agendadas. Para mais, contacte o barbeiro.',
   INVALID_PHONE: 'Confirme o número de telemóvel.',
   INVALID_NAME: 'Escreva o seu nome.',
   INVALID_NOTES: 'As observações podem ter no máximo 200 caracteres.',

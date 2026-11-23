@@ -6,7 +6,7 @@ const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julh
 
 // Passo 2 — calendário mensal (semana a começar à segunda). Só os dias de
 // `disponiveis` são escolhíveis; os restantes (domingos, feriados, sem vagas,
-// fora dos 30 dias) aparecem desativados (2.1 passo 3).
+// fora do limite de dias) aparecem desativados (2.1 passo 3).
 export default function Calendario({ mes, disponiveis, selecionado, onEscolher, onMudarMes, podeAnterior, podeSeguinte }) {
   const primeiro = `${mes}-01`
   const [ano, m] = mes.split('-').map(Number)

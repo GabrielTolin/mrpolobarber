@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Plus, Repeat } from 'lucide-react'
 import { formatarEuros } from '../../../lib/dinheiro'
 import { deMinutos, hojeLisboa, partesLisboa, paraMinutos } from '../../../lib/datas'
 import { descreverEstado, estadoEfetivo, ESTADOS } from '../../../lib/estados'
@@ -72,7 +72,7 @@ export default function VistaDia({ data, periodo, agora, onAbrir, onNova }) {
                   <span className="min-w-0">
                     <span className="block truncate text-[15px] font-semibold">
                       {m.client_name}
-                      {m.source === 'weekly' && <span className="ml-1.5" title="Marcação semanal">🔁</span>}
+                      {m.source === 'weekly' && <Repeat size={14} strokeWidth={2.2} className="mb-0.5 ml-1.5 inline text-gold" aria-label="Marcação semanal" />}
                     </span>
                     <span className="block truncate text-[13px] text-muted">
                       {m.appointment_services.map((s) => s.service_name).join(' + ')} · {m.total_duration_minutes} min
