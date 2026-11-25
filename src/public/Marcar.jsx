@@ -9,6 +9,7 @@ import GrelhaHoras from './ui/GrelhaHoras'
 import ResumoMarcacao from './ui/ResumoMarcacao'
 import ProximasMarcacoes from './ui/ProximasMarcacoes'
 import AtivarLembretes from './ui/AtivarLembretes'
+import CampoTelefone from './ui/CampoTelefone'
 import { esquecerCliente, esquecerTudo, guardarCliente, juntarMarcacao, lerCliente } from './lembrar'
 import { criarIcs, descarregarIcs } from './ics'
 import { MENSAGENS, mensagemErro, cotarPreco, criarMarcacao, diaSemanaPlural, diasDisponiveis, horasDisponiveis, obterInfo, obterServicos, pedirSemanal } from './publicApi'
@@ -432,18 +433,14 @@ function PassoDados({ servico, dia, hora, dados, telefoneFixo, lembrado, onEsque
           {erros.nome && <span className="mt-1 block text-xs text-warn">{erros.nome}</span>}
         </label>
 
-        <label className="block">
+        <div className="block">
           <span className="text-sm font-medium text-muted">Telemóvel</span>
-          <div className="mt-1.5 flex gap-2">
-            <span className="field w-[74px] shrink-0 bg-bg/70 text-center text-muted">+351</span>
-            <input
+          <div className="mt-1.5">
+            <CampoTelefone
               value={dados.telefone}
-              onChange={mudar('telefone')}
+              onChange={(telefone) => onMudar((d) => ({ ...d, telefone }))}
               readOnly={telefoneFixo}
-              inputMode="tel"
-              autoComplete="tel-national"
-              placeholder="912 345 678"
-              className={`field bg-bg/70 ${telefoneFixo ? 'text-muted' : ''}`}
+              className="bg-bg/70"
             />
           </div>
           {telefoneFixo ? (
@@ -454,10 +451,10 @@ function PassoDados({ servico, dia, hora, dados, telefoneFixo, lembrado, onEsque
               </Link>
             </span>
           ) : (
-            <span className="mt-1 block text-xs text-muted-2">Número estrangeiro? Escreva-o com o indicativo, ex.: +44…</span>
+            <span className="mt-1 block text-xs text-muted-2">Número estrangeiro? Escolha o país. Foreign number? Choose your country.</span>
           )}
           {erros.telefone && <span className="mt-1 block text-xs text-warn">{erros.telefone}</span>}
-        </label>
+        </div>
 
         <fieldset>
           <legend className="text-sm font-medium text-muted">Que corte quer? (opcional)</legend>

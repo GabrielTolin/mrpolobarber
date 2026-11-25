@@ -1,0 +1,76 @@
+# Cópia de segurança noturna da base de dados (Etapa 8.6, decisão do Gabriel 2026-11-25).
+#
+# Todas as noites (~02:30 em Lisboa) faz a cópia completa da base de dados Supabase
+# (papéis, estrutura e dados), CIFRA-A com AES-256 e guarda-a como "artifact" do GitHub
+# durante 30 dias. O repositório é PÚBLICO: sem a palavra-passe de cifra o ficheiro não
+# se lê. Nunca aparece nenhum dado nos registos.
+#
+# Segredos (GitHub → Settings → Secrets and variables → Actions), postos pelo Gabriel:
+#   SUPABASE_DB_URL     ligação "Session pooler" da Supabase (Connect), com a palavra-passe da BD
+#   BACKUP_PASSPHRASE   palavra-passe da cifra (guardar também fora do GitHub, sem ela não há restauro)
+# Restauro: docs/OPERACAO.md §5.
+name: Cópia noturna da base de dados
+
+on:
+  schedule:
+    - cron: '30 2 * * *' # 02:30 UTC
+  workflow_dispatch: # botão "Run workflow" para testar ou fazer uma cópia fora de horas
+
+permissions:
+  contents: read
+
+concurrency:
+  group: copia-noturna
+  cancel-in-progress: false
+
+jobs:
+  copia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Confirmar que os segredos existem
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          [ -n "$SUPABASE_DB_URL" ] || { echo "::error::Falta o segredo SUPABASE_DB_URL"; exit 1; }
+          [ -n "$BACKUP_PASSPHRASE" ] || { echo "::error::Falta o segredo BACKUP_PASSPHRASE"; exit 1; }
+          [ ${#BACKUP_PASSPHRASE} -ge 16 ] || { echo "::error::BACKUP_PASSPHRASE tem de ter pelo menos 16 caracteres"; exit 1; }
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Fazer a cópia (papéis, estrutura, dados)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          mkdir -p copia
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f copia/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f copia/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f copia/data.sql --use-copy --data-only
+          # Sanidade: a cópia dos dados tem de ter as marcações e os clientes
+          grep -Eq 'COPY "?public"?\."?appointments"? ' copia/data.sql
+          grep -Eq 'COPY "?public"?\."?clients"? ' copia/data.sql
+          ls -l copia
+
+      - name: Cifrar (AES-256) e apagar o texto simples
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          NOME="mrpolobarber-$(date -u +%Y-%m-%d)"
+          tar -czf "$NOME.tar.gz" -C copia .
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
+              --symmetric --cipher-algo AES256 -o "$NOME.tar.gz.gpg" "$NOME.tar.gz" <<< "$BACKUP_PASSPHRASE"
+          shred -u "$NOME.tar.gz" copia/*.sql
+          echo "NOME=$NOME" >> "$GITHUB_ENV"
+          ls -l "$NOME.tar.gz.gpg"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NOME }}
+          path: ${{ env.NOME }}.tar.gz.gpg
+          retention-days: 30
+          if-no-files-found: error

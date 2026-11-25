@@ -4,6 +4,7 @@ import { ChevronRight, MessageCircle, UserCheck, UserPlus, X } from 'lucide-reac
 import { MENSAGENS, verificarHabitual } from '../publicApi'
 import { lerCliente } from '../lembrar'
 import { formatarTelefone, normalizarTelefone } from '../../lib/telefone'
+import CampoTelefone from './CampoTelefone'
 
 // Janela ao carregar em "Marcar horário" (P-01, decisão do Gabriel 2026-11-15):
 //   "Visitante / 1.ª vez" → fluxo normal
@@ -70,21 +71,13 @@ export default function EscolhaCliente({ whatsapp, onFechar }) {
 
         {passo === 'telefone' && (
           <form onSubmit={verificar} noValidate className="flex flex-col gap-3">
-            <label className="block">
+            <div className="block">
               <span className="text-sm font-medium text-muted">Telemóvel registado</span>
-              <div className="mt-1.5 flex gap-2">
-                <span className="field w-[74px] shrink-0 text-center text-muted">+351</span>
-                <input
-                  value={telefone}
-                  onChange={(e) => setTelefone(e.target.value)}
-                  inputMode="tel"
-                  autoComplete="tel-national"
-                  placeholder="912 345 678"
-                  autoFocus
-                  className="field"
-                />
+              <div className="mt-1.5">
+                <CampoTelefone value={telefone} onChange={setTelefone} autoFocus />
               </div>
-            </label>
+              <span className="mt-1 block text-xs text-muted-2">Número estrangeiro? Escolha o país.</span>
+            </div>
             {erro && <p role="alert" className="text-sm text-warn">{erro}</p>}
             <button type="submit" disabled={aVerificar} className="btn-primary mt-1 w-full py-3.5">
               {aVerificar ? 'A verificar…' : 'Continuar'}

@@ -143,6 +143,72 @@ O Gabriel achou os pedidos automáticos (push 2 h depois, cartão na app, regra 
 
 ---
 
+## Telemóveis estrangeiros: seletor de país ✅ *(2026-11-25, pedido do Gabriel)*
+
+Os números estrangeiros já eram aceites (com `+` ou `00`), mas a caixa "+351" fixa dava a ideia de que só serviam números portugueses.
+- **Componente novo:** `src/public/ui/CampoTelefone.jsx`. Tem um seletor de país, com 🇵🇹 +351 por omissão e 🇬🇧 +44, 🇮🇪 +353, 🇪🇸 +34, 🇫🇷 +33, 🇩🇪 +49, 🇳🇱 +31, 🇧🇪 +32, 🇮🇹 +39, 🇨🇭 +41, 🇧🇷 +55, 🇺🇸 +1 e 🌍 Outro, e o exemplo de número de cada país.
+  - Quem colar o número já com `+`/`00` vê o país mudar sozinho.
+  - O valor continua a ser uma só string para `normalizarTelefone()`. **Nada mudou na base de dados nem nas regras.**
+- **Onde está:** no passo 4 da marcação (dica "Número estrangeiro? Escolha o país. Foreign number? Choose your country.") e na janela "Tenho cadastro". No telemóvel fixo do cadastro, o seletor fica bloqueado.
+- **Verificado no browser (375 px), respostas simuladas:**
+
+  | Escrito | Vai para o servidor |
+  |---|---|
+  | 🇵🇹 `912 345 678` | +351912345678 |
+  | 🇬🇧 `7700 900123` | +447700900123 |
+  | colado `+55 11 98765 4321` | o país muda para 🇧🇷 → +5511987654321 |
+  | colado `0033 6 12…` | 🇫🇷 → +33612345678 |
+  | 🌍 Outro `+48 512…` | +48512345678 |
+
+  - Um número inglês "não encontrado" chega ao passo 4 com 🇬🇧 +44 já escolhido.
+  - Sem erros na consola e o build está OK.
+- **Nota:** no Windows aparecem as letras do país ("GB") em vez das bandeiras. No iPhone e no Android aparecem as bandeiras.
+
+---
+
+## 8.6 — Verificação final ✅ *(2026-11-25, só leitura)* · 🔶 cópia noturna escrita, falta configurar
+
+| Verificação | Resultado |
+|---|---|
+| RLS | ✅ Todas as tabelas de `public` têm RLS |
+| Público (anon) | ✅ Nenhum acesso direto a tabelas. Executa só as **12 funções previstas** (`public_info`, `public_services`, `available_days/times`, `quote_price`, `check_regular`, `create_booking`, `get_booking`, `cancel_booking`, `request_weekly`, `subscribe/unsubscribe_client_push`) |
+| Funções do painel | ✅ As 11 `admin_*` chamam `require_admin()`. `available_slots` não chama, mas só mostra horários livres (o mesmo que a página pública) |
+| Funções `security definer` | ✅ Todas com `search_path` fixo |
+| Advisors da Supabase | 38 avisos, todos de segurança e **todos esperados**: funções chamáveis pelo público ou pelo painel. Mais 1 recomendação, a **proteção contra palavras-passe vazadas** (opção do Auth, ver abaixo). Sem avisos de desempenho |
+| Contas novas | ✅ Registo **fechado** (`disable_signup = true`), só entrada por email |
+| Segredos | ✅ No repositório só há o `.env.example`, com exemplos. 0 chaves `service_role` ou `sb_secret_` no histórico do Git. 0 no site publicado |
+| Tarefas automáticas (7 dias) | ✅ **0 falhas** em 20 431 execuções (estados, notificações, anonimização, limpezas, marcação semanal). `ensure_holidays` corre a 1/12 |
+| Push ao barbeiro (7 dias) | ✅ 30 de 32 enviadas. As 2 que faltam são de 19/11 às 13:54 e 14:06, **antes** de o iPhone do Matheus ficar registado (16:16), e foram vistas no painel |
+| Lembretes aos clientes | ✅ 2 aparelhos ativados e 1 lembrete enviado |
+| **Cópias de segurança** | ⚠️ **Não há.** O plano gratuito não guarda cópias diárias (`backups: []`, PITR desligado). Feita uma **cópia manual** a 2026-11-25: as 17 tabelas em JSON, em `Desktop\mrpolobarber-backups\2026-11-25_copia-completa\`, fora do repositório e **com dados pessoais** |
+
+**Recomendações:**
+1. **Cópias de segurança: decidida a opção B, cópia noturna grátis** (2026-11-25). Ficheiro `.github/workflows/copia-noturna.yml`: cópia completa às 02:30 UTC, cifrada com AES-256 (o repositório é público), *artifact* guardado 30 dias. Configurar, testar e restaurar: [OPERACAO.md](OPERACAO.md) §5. **Falta:** o Gabriel criar os 2 segredos no GitHub e correr o 1.º teste. Opções que estavam em cima da mesa:
+   - **A.** Plano Pro da Supabase: cópias diárias guardadas 7 dias, sem trabalho.
+   - **B.** Cópia automática grátis todas as noites, por um GitHub Action, para um repositório privado. O Gabriel põe a ligação à base de dados como segredo no GitHub.
+   - **C.** Cópia manual semanal.
+2. **Proteção contra palavras-passe vazadas:** Supabase → Authentication → Policies (o Gabriel decide; pode exigir o plano Pro).
+3. **Mais tarde:** limpar o `cron.job_run_details` (cresce cerca de 20 mil linhas por semana, ainda sem impacto).
+
+---
+
+## 8.5 — Divulgação aos clientes ✅ *(feita pelo Gabriel e pelo Matheus; registada a 2026-11-25)*
+
+**Primeiros números no servidor (2026-11-25):**
+
+| Indicador | Valor |
+|---|---|
+| Marcações online, últimos 7 dias | **19** |
+| Marcações feitas no painel, últimos 7 dias | 10 |
+| Marcações futuras confirmadas | 16 |
+| Clientes na base | 57 |
+| Aparelhos com lembrete ativado | 2 |
+| Lembretes enviados | 1 |
+| Marcações semanais (pendentes e ativas) | 1 |
+| Notificações ao barbeiro sem envio (48 h) | 0 |
+
+---
+
 ## 8.4 — Instalação no iPhone do Matheus ✅ *(feita a 2026-11-19; verificada no servidor a 2026-11-23)*
 
 **Verificado no servidor (2026-11-23):**
