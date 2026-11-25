@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { CalendarCheck, Clock, MapPin, MessageCircle, Scissors } from 'lucide-react'
+import { CalendarCheck, Clock, MapPin, MessageCircle, Scissors, Star } from 'lucide-react'
 
 const ICONE = { size: 16, strokeWidth: 1.8, 'aria-hidden': true }
 const BRILHO = { textShadow: '0 0 36px rgba(227, 185, 85, 0.45)' }
@@ -21,7 +21,7 @@ function IconeInstagram({ size = 16, className = '' }) {
 // e destaques em baixo. Curta e direta: sem cabeçalho/risca do layout e sem as
 // caixinhas do passo a passo (essas só aparecem depois de "Marcar horário").
 // Primeiro telemóvel, depois ecrã grande (≥ 1024 px). Sem preços (2.7).
-export default function Entrada({ nome, barbeiro, morada, mapa, whatsapp, instagram, horario, resumoHorario, foto, onMarcar }) {
+export default function Entrada({ nome, barbeiro, morada, mapa, whatsapp, instagram, avaliacao, horario, resumoHorario, foto, onMarcar }) {
   return (
     <div className="min-h-svh bg-bg text-fg">
       {/* ── Herói: ocupa o ecrã todo ── */}
@@ -183,6 +183,11 @@ export default function Entrada({ nome, barbeiro, morada, mapa, whatsapp, instag
               {whatsapp && (
                 <a href={whatsapp} target="_blank" rel="noreferrer" className="btn-ghost flex items-center justify-center gap-2 lg:px-6">
                   <MessageCircle {...ICONE} /> WhatsApp
+                </a>
+              )}
+              {avaliacao && (
+                <a href={avaliacao} target="_blank" rel="noreferrer" className="btn-ghost flex items-center justify-center gap-2 lg:px-6">
+                  <Star {...ICONE} className="text-gold" /> Avaliar no Google
                 </a>
               )}
             </div>

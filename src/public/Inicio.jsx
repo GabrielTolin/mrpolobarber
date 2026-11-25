@@ -3,6 +3,7 @@ import Entrada from './ui/Entrada'
 import EscolhaCliente from './ui/EscolhaCliente'
 import { horarioEmLinhas, horarioResumo, obterInfo } from './publicApi'
 import { linkWhatsapp } from '../lib/telefone'
+import { LINK_AVALIACAO } from './avaliacao'
 
 // Página de entrada (/) com os dados reais da barbearia (public_info, 6.1).
 // Se a leitura falhar, a página aparece na mesma, sem horário nem contactos.
@@ -37,6 +38,7 @@ export default function Inicio() {
       mapa={info?.map_url}
       whatsapp={whatsapp}
       instagram={INSTAGRAM}
+      avaliacao={LINK_AVALIACAO}
       foto="/hero-matheus.webp"
       horario={horarioEmLinhas(semanal)}
       resumoHorario={info ? horarioResumo(semanal) : ['…', '']}

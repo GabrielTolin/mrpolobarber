@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { CalendarPlus, MessageCircle, Repeat } from 'lucide-react'
+import { CalendarPlus, MessageCircle, Repeat, Star } from 'lucide-react'
 import Carregando from '../components/Carregando'
 import ResumoMarcacao from './ui/ResumoMarcacao'
 import AtivarLembretes from './ui/AtivarLembretes'
+import { LINK_AVALIACAO } from './avaliacao'
 import { MENSAGENS, cancelarMarcacao, diaSemanaPlural, obterInfo, verMarcacao } from './publicApi'
 import { dataPorExtenso, formatarData, instanteLisboa, partesLisboa } from '../lib/datas'
 import { linkWhatsapp } from '../lib/telefone'
@@ -115,6 +116,16 @@ export default function LinkPessoal() {
         )}
       </ResumoMarcacao>
       {(m.status === 'confirmed' || m.weekly?.status === 'active') && <AtivarLembretes codigo={token} />}
+      {/* Depois do corte: convite para avaliar no Google (2026-11-25) */}
+      {m.status === 'completed' && (
+        <a href={LINK_AVALIACAO} target="_blank" rel="noreferrer" className="card mt-5 flex items-center gap-3 border-line-gold bg-bg/70 hover:border-gold">
+          <Star size={20} strokeWidth={1.8} className="shrink-0 text-gold" aria-hidden />
+          <span>
+            <span className="block text-sm font-semibold">Como foi o seu corte?</span>
+            <span className="text-xs text-muted">Deixe a sua avaliação no Google. Ajuda muito a barbearia.</span>
+          </span>
+        </a>
+      )}
       {m.weekly?.status === 'active' && (
         <p className="mt-3 text-xs text-muted-2">Para faltar a uma semana ou deixar a marcação semanal, fale com o barbeiro.</p>
       )}

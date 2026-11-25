@@ -102,20 +102,16 @@ Migration `20261123120000_client_reminders.sql` e Edge Function `send-push`, apl
   6. O anónimo só executa ativar e desativar; não lê as tabelas nem chama o envio. O cron está atualizado.
 - **Falta testar num telemóvel real:** ativar a partir de uma marcação e receber às 08:00 do dia.
 
-### Pedido de avaliação no Google ⏸️ *(começado a 2026-11-23; continua no dia seguinte)*
+### Avaliação no Google ✅ *(2026-11-25: só o link na página pública)*
 
-O Gabriel escolheu os **três caminhos**:
-1. **push 2 h depois** de uma marcação concluída;
-2. **cartão "Como foi o seu corte?"** da próxima vez que o cliente abrir a app;
-3. **botão "Pedir avaliação"** por WhatsApp no painel;
-
-e um link no rodapé. **Regra:** um pedido por cliente, no máximo outro passados 6 meses. Faltas e canceladas nunca recebem.
-
-- **Falta o link certo.** O que foi enviado (`maps.app.goo.gl/X5CUF7…`) abre a **página** da barbearia no Maps, não o formulário. O link certo obtém-se no Perfil da Empresa → "Pedir avaliações" (`https://g.page/r/…/review`) e o link fica num campo novo nas Configurações → Barbearia.
-- **Trabalho já escrito, guardado fora do repositório**, em `Desktop\mrpolobarber-backups\2026-11-23_avaliacoes-por-acabar\`:
-  - `20261123140000_review_requests.sql` (não aplicada): `settings.review_url`, `clients.review_requested_at`, `send_review_requests()` no tick, `review_check(códigos)` e `public_info` com `review_url`;
-  - `avaliacoes.patch`: memória do telemóvel (`mpb.para-avaliar`), `verificarAvaliacao`, o campo nas Configurações, os dados do painel e o service worker a abrir links de outros sites.
-- **Ainda por escrever:** o cartão na página inicial, o botão no detalhe da marcação, o link no rodapé, os testes e a política de privacidade.
+O Gabriel achou os pedidos automáticos (push 2 h depois, cartão na app, regra de 6 meses) demasiado complexos para agora. **Decisão: só o link.**
+- **Link:** `https://g.page/r/Cck5uOjeFmq3EBE/review`. Verificado: abre o formulário das estrelas da barbearia (`search.google.com/local/writereview?placeid=…`). Está em `src/public/avaliacao.js`; se mudar, muda-se aí.
+- **Onde aparece:**
+  - página inicial, em "Onde estamos": botão **"⭐ Avaliar no Google"**, ao lado de Ver no mapa, Instagram e WhatsApp;
+  - link pessoal, quando a marcação está **concluída**: cartão **"Como foi o seu corte? Deixe a sua avaliação no Google."**
+- Sem base de dados e sem push. Chega a quem já tem a app instalada, sem reinstalar.
+- **Verificado no browser (375 px):** o botão abre o link num separador novo, e o cartão só aparece numa marcação concluída. O build está OK.
+- **Trabalho mais completo, não usado:** fica guardado em `Desktop\mrpolobarber-backups\2026-11-23_avaliacoes-por-acabar\` (migration não aplicada e patch), caso um dia se queira o push ou o cartão automático. Pode ser apagado.
 
 ---
 
